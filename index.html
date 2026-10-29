@@ -109,7 +109,7 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 const CANDIES = [
   {id:'choco', name:'Tablette de chocolat', col:'#d0884a'},
   {id:'lolly', name:'Sucette citrouille', col:'#ff8a1f'},
-  {id:'jujube', name:'Jujube framboise', col:'#ff3a7a'},
+  {id:'peach', name:'Anneau de pêche', col:'#ffa060'},
   {id:'worm', name:'Ver gélifié', col:'#7dff3a'},
   {id:'bear', name:'Ourson gélifié', col:'#2ef2ff'},
   {id:'licorice', name:'Réglisse rouge', col:'#ff5a3a'},
@@ -141,26 +141,18 @@ function drawCandy(i, x, y, s = 1, rot = 0) {
       for (let a = 0; a < 12; a += .3) { const r = a * .42; ctx.lineTo(Math.cos(a) * r, -1 + Math.sin(a) * r); }
       ctx.strokeStyle = C.bile; ctx.lineWidth = 1.1; ctx.stroke();
       break;
-    case 'jujube': {
-      // a raspberry-shaped gummy: rounded dome with a flat base, bumpy sugared skin, green leaves on top
-      const berry = () => { ctx.beginPath(); ctx.moveTo(-6, 4.6); ctx.bezierCurveTo(-7.6, -1.5, -4, -6.6, 0, -6.6); ctx.bezierCurveTo(4, -6.6, 7.6, -1.5, 6, 4.6); ctx.quadraticCurveTo(0, 6.6, -6, 4.6); ctx.closePath(); };
-      berry(); sh(rg(-2, -3, .5, 9, ['#ff6a9a', '#d81850', '#7a0628']));
-      ctx.save(); berry(); ctx.clip();
-      for (let r = 0, y = -5.6; y < 6; r++, y += 2.1)
-        for (let x = -7 + (r % 2) * 1.2; x < 7; x += 2.4) {
-          ell(x, y, 1.15, 1.05, rg(x - .4, y - .4, .1, 1.2, ['#ff9ac0', '#e8306a', '#a00c40']), 0, false);
-          ctx.beginPath(); ctx.ellipse(x, y, 1.15, 1.05, 0, 0, TAU); ctx.strokeStyle = 'rgba(90,0,30,.55)'; ctx.lineWidth = .35; ctx.stroke();
-          ell(x - .4, y - .45, .3, .22, 'rgba(255,255,255,.8)', 0, false);
-        }
-      ctx.fillStyle = lg(0, -6, 0, 6, ['rgba(0,0,0,0)', 'rgba(60,0,20,.35)']); ctx.fillRect(-8, -7, 16, 14);
+    case 'peach': {
+      // a peach ring seen at an angle: yellow bottom layer under a peach-orange top, sugar-coated
+      const ring = dy => { ctx.beginPath(); ctx.ellipse(0, dy, 6.8, 4.4, 0, 0, TAU); ctx.moveTo(2.6, dy - .3); ctx.ellipse(0, dy - .3, 2.6, 1.5, 0, 0, TAU, true); };
+      ring(1.9); ctx.fillStyle = lg(0, -3, 0, 6, ['#fff2a0', '#ffd23a', '#d89a10']); ctx.fill('evenodd');
+      ctx.lineWidth = .9; ctx.strokeStyle = OUT; ctx.stroke();
+      ring(-.6); ctx.fillStyle = rg(-2.5, -2.6, .5, 8, ['#ffd0a0', '#ff8a4a', '#e0503a']); ctx.fill('evenodd'); ctx.stroke();
+      // inner wall of the hole, showing both layers
+      ctx.save(); ctx.beginPath(); ctx.ellipse(0, -.9, 2.6, 1.5, 0, 0, TAU); ctx.clip();
+      ctx.fillStyle = '#c85030'; ctx.fillRect(-3, -2.6, 6, 1.3); ctx.fillStyle = '#e8b020'; ctx.fillRect(-3, -1.3, 6, 1);
       ctx.restore();
-      berry(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.1; ctx.stroke();
-      [[-2.2, 1.6], [1.6, -2.8], [3.4, 2.4], [-4, -1.4], [.4, 3.6], [-1, -4.4]].forEach(([a, b]) => ell(a, b, .3, .3, '#fff4f8', 0, false));
-      [[-2.6, -5.7, .35], [2.6, -5.7, -.35], [-1.2, -6.6, -.5], [1.2, -6.6, .5]].forEach(([a, b, r]) => {
-        ctx.beginPath(); ctx.ellipse(a, b, 2, .8, r, 0, TAU); ctx.fillStyle = lg(a, b - 1, a, b + 1, ['#8af050', '#2a8a10']); ctx.fill();
-        ctx.strokeStyle = OUT; ctx.lineWidth = .5; ctx.stroke();
-      });
-      line(0, -6.6, .5, -8.6, OUT, 1.6); line(0, -6.6, .5, -8.6, '#4ad01a', .8);
+      ctx.beginPath(); ctx.ellipse(-2.8, -2.6, 2.2, .8, -.3, 0, TAU); ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fill();
+      [[-4.6, -.6], [-3, 1.8], [-.6, 2.6], [2.2, 2.4], [4.4, .8], [4.6, -1.8], [2, -3.4], [-1, -3.6], [-5, 3.4], [.6, 4.8], [4.2, 3.8]].forEach(([a, b]) => ell(a, b, .3, .3, '#fffaf0', 0, false));
       break;
     }
     case 'worm':
@@ -366,12 +358,12 @@ function drawBat(x, y, s = 1) {
 const SPECIES = [
   {id:'zombie', name:'Zombie', likes:['choco','eye'], hates:['lolly','bear'], cry:'GRAAAH!', col:C.toxic, pitch:70, w:26, h:43, draw:drawZombie},
   {id:'mummy', name:'Momie', likes:['lolly','licorice'], hates:['choco','floss'], cry:'MMMPHH!', col:'#f2e8c8', pitch:110, w:26, h:44, draw:drawMummy},
-  {id:'vampire', name:'Vampire', likes:['jujube','floss'], hates:['worm','licorice'], cry:'SSSSS!', col:C.blood, pitch:160, w:26, h:47, draw:drawVampire},
-  {id:'ghost', name:'Fantôme', likes:['bear','floss'], hates:['jujube','eye'], cry:'BOUUUH!', col:C.acid, pitch:220, w:26, h:44, draw:drawGhost},
-  {id:'wolf', name:'Loup-garou', likes:['worm','choco'], hates:['floss','jujube'], cry:'AOUUUH!', col:'#ffd21f', pitch:95, w:30, h:44, draw:drawWolf},
+  {id:'vampire', name:'Vampire', likes:['peach','floss'], hates:['worm','licorice'], cry:'SSSSS!', col:C.blood, pitch:160, w:26, h:47, draw:drawVampire},
+  {id:'ghost', name:'Fantôme', likes:['bear','floss'], hates:['peach','eye'], cry:'BOUUUH!', col:C.acid, pitch:220, w:26, h:44, draw:drawGhost},
+  {id:'wolf', name:'Loup-garou', likes:['worm','choco'], hates:['floss','peach'], cry:'AOUUUH!', col:'#ffd21f', pitch:95, w:30, h:44, draw:drawWolf},
   {id:'skeleton', name:'Squelette', likes:['floss','lolly'], hates:['choco','worm'], cry:'CLAC CLAC!', col:C.bone, pitch:300, w:24, h:43, draw:drawSkeleton},
   {id:'troll', name:'Troll', likes:['eye','worm'], hates:['bear','floss'], cry:'GRONK!', col:'#a8e070', pitch:55, w:32, h:46, draw:drawTroll},
-  {id:'goblin', name:'Gobelin', likes:['licorice','jujube'], hates:['eye','lolly'], cry:'GRRR! MES SOUS!', col:C.bile, pitch:240, w:24, h:37, draw:drawGoblin},
+  {id:'goblin', name:'Gobelin', likes:['licorice','peach'], hates:['eye','lolly'], cry:'GRRR! MES SOUS!', col:C.bile, pitch:240, w:24, h:37, draw:drawGoblin},
 ];
 
 /* ---------- Scenery: built once per resize at screen resolution ---------- */

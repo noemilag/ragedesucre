@@ -142,12 +142,25 @@ function drawCandy(i, x, y, s = 1, rot = 0) {
       ctx.strokeStyle = C.bile; ctx.lineWidth = 1.1; ctx.stroke();
       break;
     case 'jujube': {
-      // a raspberry-shaped gummy: a dome of sugared beads
-      const beads = [[-4.5, 2.6, 1.9], [-1.5, 2.8, 1.9], [1.5, 2.8, 1.9], [4.5, 2.6, 1.9], [-3, -.4, 2], [0, -.3, 2], [3, -.4, 2], [-1.5, -3.3, 1.9], [1.5, -3.3, 1.9], [0, -5.6, 1.6]];
-      beads.forEach(([a, b, r]) => { ctx.beginPath(); ctx.arc(a, b, r, 0, TAU); ctx.strokeStyle = OUT; ctx.lineWidth = 2.2; ctx.stroke(); });
-      beads.forEach(([a, b, r]) => ell(a, b, r, r, rg(a - .6, b - .7, .2, r, ['#ff9ac0', '#e0245e', '#8a0a34']), 0, false));
-      beads.forEach(([a, b]) => ell(a - .6, b - .7, .5, .4, 'rgba(255,255,255,.75)', 0, false));
-      for (let k = 0; k < 9; k++) { const [a, b] = beads[k]; ell(a + .8, b + .6, .25, .25, '#fff4f8', 0, false); }
+      // a raspberry-shaped gummy: rounded dome with a flat base, bumpy sugared skin, green leaves on top
+      const berry = () => { ctx.beginPath(); ctx.moveTo(-6, 4.6); ctx.bezierCurveTo(-7.6, -1.5, -4, -6.6, 0, -6.6); ctx.bezierCurveTo(4, -6.6, 7.6, -1.5, 6, 4.6); ctx.quadraticCurveTo(0, 6.6, -6, 4.6); ctx.closePath(); };
+      berry(); sh(rg(-2, -3, .5, 9, ['#ff6a9a', '#d81850', '#7a0628']));
+      ctx.save(); berry(); ctx.clip();
+      for (let r = 0, y = -5.6; y < 6; r++, y += 2.1)
+        for (let x = -7 + (r % 2) * 1.2; x < 7; x += 2.4) {
+          ell(x, y, 1.15, 1.05, rg(x - .4, y - .4, .1, 1.2, ['#ff9ac0', '#e8306a', '#a00c40']), 0, false);
+          ctx.beginPath(); ctx.ellipse(x, y, 1.15, 1.05, 0, 0, TAU); ctx.strokeStyle = 'rgba(90,0,30,.55)'; ctx.lineWidth = .35; ctx.stroke();
+          ell(x - .4, y - .45, .3, .22, 'rgba(255,255,255,.8)', 0, false);
+        }
+      ctx.fillStyle = lg(0, -6, 0, 6, ['rgba(0,0,0,0)', 'rgba(60,0,20,.35)']); ctx.fillRect(-8, -7, 16, 14);
+      ctx.restore();
+      berry(); ctx.strokeStyle = OUT; ctx.lineWidth = 1.1; ctx.stroke();
+      [[-2.2, 1.6], [1.6, -2.8], [3.4, 2.4], [-4, -1.4], [.4, 3.6], [-1, -4.4]].forEach(([a, b]) => ell(a, b, .3, .3, '#fff4f8', 0, false));
+      [[-2.6, -5.7, .35], [2.6, -5.7, -.35], [-1.2, -6.6, -.5], [1.2, -6.6, .5]].forEach(([a, b, r]) => {
+        ctx.beginPath(); ctx.ellipse(a, b, 2, .8, r, 0, TAU); ctx.fillStyle = lg(a, b - 1, a, b + 1, ['#8af050', '#2a8a10']); ctx.fill();
+        ctx.strokeStyle = OUT; ctx.lineWidth = .5; ctx.stroke();
+      });
+      line(0, -6.6, .5, -8.6, OUT, 1.6); line(0, -6.6, .5, -8.6, '#4ad01a', .8);
       break;
     }
     case 'worm':

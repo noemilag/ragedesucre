@@ -232,22 +232,24 @@ function drawZombie(p, o) {
 function drawMummy(p, o) {
   const sw = Math.sin(p) * 1.2, flut = Math.sin(T * 3 + o.seed);
   legs(p, '#d8cca8', 10, 3.4, 3.8, '#a89a74');
-  limb(-6, -27, -8.5 - sw, -14, 3.4, '#bfb28a'); ell(-8.6 - sw, -13.2, 1.9, 1.7, '#bfb28a');
+  // loose bandage streaming behind the head, so it reads as moving forward
+  ctx.beginPath(); ctx.moveTo(-4, -39); ctx.bezierCurveTo(-10, -40 + flut, -13, -35 - flut, -18 - flut * .8, -33 + flut * 1.4);
+  ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 2.8; ctx.stroke(); ctx.strokeStyle = '#ece2c2'; ctx.lineWidth = 1.5; ctx.stroke();
+  // classic mummy pose: both arms stretched out in front
+  limb(-3, -27, 13, -25 + sw, 3.4, '#bfb28a'); ell(13.8, -25 + sw, 1.9, 1.7, '#bfb28a');
   rrect(-8, -29.5, 16, 20, 5); sh(lg(0, -30, 0, -9, ['#f2e8c8', '#b9ac86']));
   ctx.save(); rrect(-8, -29.5, 16, 20, 5); ctx.clip();
   for (let k = 0; k < 7; k++) line(-9, -28 + k * 3.2, 9, -30 + k * 3.2 + 2.5, '#9c8f6a', .7);
   ell(-3, -18, 2.2, 1.4, 'rgba(40,24,10,.55)', .4, false);
   ctx.restore();
-  limb(6, -27, 8.5 + sw, -14, 3.6, '#e2d6b2'); ell(8.8 + sw, -13.2, 2, 1.8, '#e2d6b2');
-  for (let k = 0; k < 3; k++) line(5.5 + k * .9, -25 + k * 4, 8.6 + k * .9, -23.5 + k * 4, '#9c8f6a', .6);
-  ctx.beginPath(); ctx.moveTo(8.8 + sw, -13); ctx.bezierCurveTo(10 + sw, -9, 9 + flut, -6, 10.5 + flut * 1.6, -3);
-  ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 2.8; ctx.stroke(); ctx.strokeStyle = '#ece2c2'; ctx.lineWidth = 1.5; ctx.stroke();
-  ell(0, -36, 7, 7.4, lg(0, -43, 0, -29, ['#f6ecd0', '#b3a682']));
-  ctx.save(); ctx.beginPath(); ctx.ellipse(0, -36, 7, 7.4, 0, 0, TAU); ctx.clip();
-  for (let k = 0; k < 6; k++) line(-8, -41 + k * 2.6, 8, -42.5 + k * 2.6 + 1.6, '#9c8f6a', .6);
-  poly([-6, -37.5, 7, -38.6, 7, -34.6, -6, -33.8], '#120c08', false);
+  limb(4, -25, 17, -22 - sw, 3.6, '#e2d6b2'); ell(17.8, -22 - sw, 2, 1.8, '#e2d6b2');
+  for (let k = 0; k < 3; k++) line(7 + k * 3.4, -25.6 - sw * k * .3, 8.4 + k * 3.4, -22.4 - sw * k * .3, '#9c8f6a', .6);
+  ell(1, -36, 7, 7.4, lg(0, -43, 0, -29, ['#f6ecd0', '#b3a682']));
+  ctx.save(); ctx.beginPath(); ctx.ellipse(1, -36, 7, 7.4, 0, 0, TAU); ctx.clip();
+  for (let k = 0; k < 6; k++) line(-7, -41 + k * 2.6, 9, -42.5 + k * 2.6 + 1.6, '#9c8f6a', .6);
+  poly([-.5, -37.8, 8, -38.6, 8, -34.6, -.5, -34.2], '#120c08', false);
   ctx.restore();
-  glowEye(3.4, -36.4, 1.3, C.acid, 7); ell(-1.6, -35.8, .9, .7, '#2a2016', 0, false);
+  glowEye(5, -36.4, 1.3, C.acid, 7); ell(1.4, -36, .9, .7, '#2a2016', 0, false);
 }
 function drawVampire(p, o) {
   const sw = Math.sin(T * 2 + o.seed), flap = Math.sin(T * 3 + o.seed) * 1.5;
@@ -991,7 +993,7 @@ function drawFog(i) {
   }
   ctx.restore();
 }
-const HEAD = {zombie:[1.4, -34.5, 7.4], mummy:[0, -36, 7.2], vampire:[1, -37.5, 6.6], ghost:[0, -33, 11], wolf:[9, -32, 6], skeleton:[1, -35.5, 6.6], troll:[7.5, -38.5, 6.6], goblin:[2, -27.5, 7]};
+const HEAD = {zombie:[1.4, -34.5, 7.4], mummy:[1, -36, 7.2], vampire:[1, -37.5, 6.6], ghost:[0, -33, 11], wolf:[9, -32, 6], skeleton:[1, -35.5, 6.6], troll:[7.5, -38.5, 6.6], goblin:[2, -27.5, 7]};
 function rim(x, y, r) {
   ctx.beginPath(); ctx.arc(x, y, r - .7, -1.45, -.1);
   ctx.strokeStyle = 'rgba(175,215,255,.6)'; ctx.lineWidth = .9; ctx.lineCap = 'round'; ctx.stroke();

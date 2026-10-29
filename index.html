@@ -107,12 +107,12 @@ function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let
 
 /* ---------- Candies (vector) ---------- */
 const CANDIES = [
-  {id:'frog', name:'Grenouille en chocolat', col:'#d0884a'},
+  {id:'choco', name:'Tablette de chocolat', col:'#d0884a'},
   {id:'lolly', name:'Sucette citrouille', col:'#ff8a1f'},
-  {id:'bean', name:'Dragée cerise', col:'#ff2240'},
+  {id:'jujube', name:'Jujube framboise', col:'#ff3a7a'},
   {id:'worm', name:'Ver gélifié', col:'#7dff3a'},
-  {id:'quill', name:'Plume en sucre', col:'#2ef2ff'},
-  {id:'licorice', name:'Roue de réglisse', col:'#b58cff'},
+  {id:'bear', name:'Ourson gélifié', col:'#2ef2ff'},
+  {id:'licorice', name:'Réglisse rouge', col:'#ff5a3a'},
   {id:'floss', name:'Barbe à papa', col:'#ff2fb3'},
   {id:'eye', name:'Œil gélifié', col:'#e9ecf4'},
 ];
@@ -120,13 +120,19 @@ const CI = Object.fromEntries(CANDIES.map((c, i) => [c.id, i]));
 function drawCandy(i, x, y, s = 1, rot = 0) {
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s);
   switch (CANDIES[i].id) {
-    case 'frog':
-      ell(-4.5, 3, 2.6, 1.6, '#5a2e14'); ell(4.5, 3, 2.6, 1.6, '#5a2e14');
-      ell(0, 1, 6, 4.2, lg(0, -3, 0, 5, ['#b06a36', '#5a2e14']));
-      ell(-2.6, -2.6, 1.8, 1.8, '#8a4a22'); ell(2.6, -2.6, 1.8, 1.8, '#8a4a22');
-      ell(-2.4, -2.9, .6, .6, '#fff4dc', 0, false); ell(2.8, -2.9, .6, .6, '#fff4dc', 0, false);
-      line(-3, 2.2, 3, 2.2, '#3a1c0c', .7);
-      ctx.beginPath(); ctx.arc(0, 1, 4.8, -2.6, -1.6); ctx.strokeStyle = 'rgba(255,220,160,.7)'; ctx.lineWidth = .8; ctx.stroke();
+    case 'choco':
+      ctx.save(); ctx.rotate(-.25);
+      rrect(-7.5, -4.8, 15, 9.6, 1.2); sh('#4a2210');
+      for (let c = 0; c < 4; c++) for (let r = 0; r < 2; r++) {
+        const sx = -6.7 + c * 3.5, sy = -4 + r * 4.2;
+        rrect(sx, sy, 3, 3.6, .5); ctx.fillStyle = lg(sx, sy, sx + 3, sy + 3.6, ['#b06a36', '#7a4020', '#5a2e14']); ctx.fill();
+        line(sx + .5, sy + .5, sx + 2.5, sy + .5, 'rgba(255,220,170,.55)', .5);
+      }
+      // peeled wrapper: torn silver foil, then red paper with a gold band
+      poly([.6, -5.4, 1.8, -4, 1, -2.6, 2.2, -1.2, 1.2, .2, 2.2, 1.6, 1.1, 3, 2, 4.4, 1.2, 5.4, 8, 5.4, 8, -5.4], '#d8deec');
+      poly([2.6, -5.6, 8.2, -5.6, 8.2, 5.6, 2.6, 5.6], lg(0, -6, 0, 6, ['#ff5a6a', C.blood, '#8a0018']));
+      rrect(2.6, -1.2, 5.6, 2.4, .2); ctx.fillStyle = '#e8c050'; ctx.fill();
+      ctx.restore();
       break;
     case 'lolly':
       limb(0, 3, 0, 10, 1.3, '#f4f0e8');
@@ -135,30 +141,43 @@ function drawCandy(i, x, y, s = 1, rot = 0) {
       for (let a = 0; a < 12; a += .3) { const r = a * .42; ctx.lineTo(Math.cos(a) * r, -1 + Math.sin(a) * r); }
       ctx.strokeStyle = C.bile; ctx.lineWidth = 1.1; ctx.stroke();
       break;
-    case 'bean':
-      ell(0, 0, 6, 3.8, rg(-2, -1.5, .5, 6.5, ['#ff7a8a', '#ff2240', '#8a0018']), .35);
-      ell(-2, -1.4, 2, .9, 'rgba(255,255,255,.65)', .35, false);
+    case 'jujube': {
+      // a raspberry-shaped gummy: a dome of sugared beads
+      const beads = [[-4.5, 2.6, 1.9], [-1.5, 2.8, 1.9], [1.5, 2.8, 1.9], [4.5, 2.6, 1.9], [-3, -.4, 2], [0, -.3, 2], [3, -.4, 2], [-1.5, -3.3, 1.9], [1.5, -3.3, 1.9], [0, -5.6, 1.6]];
+      beads.forEach(([a, b, r]) => { ctx.beginPath(); ctx.arc(a, b, r, 0, TAU); ctx.strokeStyle = OUT; ctx.lineWidth = 2.2; ctx.stroke(); });
+      beads.forEach(([a, b, r]) => ell(a, b, r, r, rg(a - .6, b - .7, .2, r, ['#ff9ac0', '#e0245e', '#8a0a34']), 0, false));
+      beads.forEach(([a, b]) => ell(a - .6, b - .7, .5, .4, 'rgba(255,255,255,.75)', 0, false));
+      for (let k = 0; k < 9; k++) { const [a, b] = beads[k]; ell(a + .8, b + .6, .25, .25, '#fff4f8', 0, false); }
       break;
+    }
     case 'worm':
       ctx.beginPath(); ctx.moveTo(-6.5, 2.5); ctx.bezierCurveTo(-3, -5, 0, 6, 3, -1); ctx.quadraticCurveTo(5, -4, 6.5, -2);
       ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 5.4; ctx.stroke();
       ctx.strokeStyle = C.toxic; ctx.lineWidth = 3.6; ctx.stroke();
       ctx.setLineDash([2.2, 2.2]); ctx.strokeStyle = C.hot; ctx.stroke(); ctx.setLineDash([]);
       break;
-    case 'quill':
-      ctx.save(); ctx.rotate(-.75);
-      ell(0, -1, 2.8, 7, lg(-3, 0, 3, 0, ['#d8fbff', '#ffffff', '#9eeaff']));
-      line(0, -8, 0, 7, '#4ab8e0', .8);
-      for (let k = -5; k < 5; k += 2) { line(0, k, -2.4, k - 1.5, '#9eeaff', .5); line(0, k, 2.4, k - 1.5, '#9eeaff', .5); }
-      limb(0, 6, 0, 9, 1.4, '#3c5cc8');
-      ctx.restore();
+    case 'bear': {
+      // translucent blue-raspberry gummy bear: outline every part first so they merge into one silhouette
+      const parts = [[-2.7, 5.4, 2.2, 1.8, 0], [2.7, 5.4, 2.2, 1.8, 0], [-4.1, .2, 1.5, 2.3, .6], [4.1, .2, 1.5, 2.3, -.6], [0, 1.8, 4, 4.4, 0], [-2.8, -7.2, 1.4, 1.4, 0], [2.8, -7.2, 1.4, 1.4, 0], [0, -4.6, 3.8, 3.3, 0]];
+      parts.forEach(([a, b, rx, ry, r]) => { ctx.beginPath(); ctx.ellipse(a, b, rx, ry, r, 0, TAU); ctx.strokeStyle = OUT; ctx.lineWidth = 2.2; ctx.stroke(); });
+      const jelly = rg(-1.5, -2, .5, 10, ['#d8fbff', '#2ec8f2', '#1a5ab0']);
+      parts.forEach(([a, b, rx, ry, r]) => ell(a, b, rx, ry, jelly, r, false));
+      ell(0, -3.6, 1.7, 1.2, 'rgba(216,251,255,.6)', 0, false);
+      ell(-1.3, -5.2, .45, .55, '#0a2a5a', 0, false); ell(1.3, -5.2, .45, .55, '#0a2a5a', 0, false);
+      ell(0, -3.9, .55, .4, '#0a2a5a', 0, false);
+      ell(-1.8, .4, .9, 2, 'rgba(255,255,255,.55)', .3, false);
       break;
+    }
     case 'licorice':
-      ell(0, 0, 6, 6, '#16121e');
-      ctx.beginPath();
-      for (let a = 0; a < 15; a += .25) { const r = 1.8 + a * .27; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
-      ctx.strokeStyle = '#3a2f52'; ctx.lineWidth = .9; ctx.stroke();
-      ell(0, 0, 1.9, 1.9, C.hot, 0, false);
+      // a twisted stick of red licorice
+      ctx.save(); ctx.rotate(-.7);
+      rrect(-8.5, -2.4, 17, 4.8, 2); sh(lg(0, -2.4, 0, 2.4, ['#ff6a50', '#e01a1a', '#7a0808']));
+      ctx.save(); rrect(-8.5, -2.4, 17, 4.8, 2); ctx.clip();
+      for (let k = -9; k < 10; k += 2.4) { line(k, 2.6, k + 2.4, -2.6, '#8a0a0a', .9); line(k + .7, 2.6, k + 3.1, -2.6, 'rgba(255,170,150,.55)', .5); }
+      ctx.restore();
+      ell(8.1, 0, 1.2, 2.2, '#c01010');
+      ell(8.1, 0, .45, .9, '#4a0404', 0, false);
+      ctx.restore();
       break;
     case 'floss':
       limb(0, 2, 0, 10, 1.3, '#d8b080');
@@ -330,14 +349,14 @@ function drawBat(x, y, s = 1) {
 }
 
 const SPECIES = [
-  {id:'zombie', name:'Zombie', likes:['frog','eye'], hates:['lolly','quill'], cry:'GRAAAH!', col:C.toxic, pitch:70, w:26, h:43, draw:drawZombie},
-  {id:'mummy', name:'Momie', likes:['lolly','licorice'], hates:['frog','floss'], cry:'MMMPHH!', col:'#f2e8c8', pitch:110, w:26, h:44, draw:drawMummy},
-  {id:'vampire', name:'Vampire', likes:['bean','floss'], hates:['worm','licorice'], cry:'SSSSS!', col:C.blood, pitch:160, w:26, h:47, draw:drawVampire},
-  {id:'ghost', name:'Fantôme', likes:['quill','floss'], hates:['bean','eye'], cry:'BOUUUH!', col:C.acid, pitch:220, w:26, h:44, draw:drawGhost},
-  {id:'wolf', name:'Loup-garou', likes:['worm','frog'], hates:['floss','bean'], cry:'AOUUUH!', col:'#ffd21f', pitch:95, w:30, h:44, draw:drawWolf},
-  {id:'skeleton', name:'Squelette', likes:['floss','lolly'], hates:['frog','worm'], cry:'CLAC CLAC!', col:C.bone, pitch:300, w:24, h:43, draw:drawSkeleton},
-  {id:'troll', name:'Troll', likes:['eye','worm'], hates:['quill','floss'], cry:'GRONK!', col:'#a8e070', pitch:55, w:32, h:46, draw:drawTroll},
-  {id:'goblin', name:'Gobelin', likes:['licorice','bean'], hates:['eye','lolly'], cry:'GRRR! MES SOUS!', col:C.bile, pitch:240, w:24, h:37, draw:drawGoblin},
+  {id:'zombie', name:'Zombie', likes:['choco','eye'], hates:['lolly','bear'], cry:'GRAAAH!', col:C.toxic, pitch:70, w:26, h:43, draw:drawZombie},
+  {id:'mummy', name:'Momie', likes:['lolly','licorice'], hates:['choco','floss'], cry:'MMMPHH!', col:'#f2e8c8', pitch:110, w:26, h:44, draw:drawMummy},
+  {id:'vampire', name:'Vampire', likes:['jujube','floss'], hates:['worm','licorice'], cry:'SSSSS!', col:C.blood, pitch:160, w:26, h:47, draw:drawVampire},
+  {id:'ghost', name:'Fantôme', likes:['bear','floss'], hates:['jujube','eye'], cry:'BOUUUH!', col:C.acid, pitch:220, w:26, h:44, draw:drawGhost},
+  {id:'wolf', name:'Loup-garou', likes:['worm','choco'], hates:['floss','jujube'], cry:'AOUUUH!', col:'#ffd21f', pitch:95, w:30, h:44, draw:drawWolf},
+  {id:'skeleton', name:'Squelette', likes:['floss','lolly'], hates:['choco','worm'], cry:'CLAC CLAC!', col:C.bone, pitch:300, w:24, h:43, draw:drawSkeleton},
+  {id:'troll', name:'Troll', likes:['eye','worm'], hates:['bear','floss'], cry:'GRONK!', col:'#a8e070', pitch:55, w:32, h:46, draw:drawTroll},
+  {id:'goblin', name:'Gobelin', likes:['licorice','jujube'], hates:['eye','lolly'], cry:'GRRR! MES SOUS!', col:C.bile, pitch:240, w:24, h:37, draw:drawGoblin},
 ];
 
 /* ---------- Scenery: built once per resize at screen resolution ---------- */

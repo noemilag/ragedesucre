@@ -22,8 +22,12 @@ Ouvre `index.html` dans un navigateur. Aucun outil à installer.
 
 ## Contenu
 
-- 8 créatures : zombie, momie, vampire, fantôme, loup-garou, squelette, troll, gobelin
-- 8 bonbons, une nouvelle créature et un nouveau bonbon à chaque niveau
+- 3 mondes de 3 niveaux, avec chacun son décor, ses créatures et ses bonbons :
+  1. **Le cimetière** : zombie, momie, squelette, fantôme
+  2. **La forêt des ténèbres** : loup-garou, gobelin, vampire, troll
+  3. **Le château maudit** : toutes les créatures réunies
+- Un **boss** au 3e niveau de chaque monde (Frankenstein, la sorcière, le roi citrouille) : il lui faut plusieurs bonbons qu'il aime pour s'en retourner, et la musique devient plus lourde quand il sort
+- Après le 3e monde, le cauchemar recommence, plus rapide
 - Musique et effets sonores générés dans le navigateur (Web Audio)
 - Tableau des records : partagé entre joueurs sur la version publiée sur claude.ai, sinon enregistré sur l'appareil
 

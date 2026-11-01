@@ -361,12 +361,129 @@ const SPECIES = [
   {id:'vampire', name:'Vampire', likes:['peach','floss'], hates:['worm','licorice'], cry:'SSSSS!', col:C.blood, pitch:160, w:26, h:47, draw:drawVampire},
   {id:'ghost', name:'Fantôme', likes:['bear','floss'], hates:['peach','eye'], cry:'BOUUUH!', col:C.acid, pitch:220, w:26, h:44, draw:drawGhost},
   {id:'wolf', name:'Loup-garou', likes:['worm','choco'], hates:['floss','peach'], cry:'AOUUUH!', col:'#ffd21f', pitch:95, w:30, h:44, draw:drawWolf},
-  {id:'skeleton', name:'Squelette', likes:['floss','lolly'], hates:['choco','worm'], cry:'CLAC CLAC!', col:C.bone, pitch:300, w:24, h:43, draw:drawSkeleton},
+  {id:'skeleton', name:'Squelette', likes:['eye','floss'], hates:['choco','worm'], cry:'CLAC CLAC!', col:C.bone, pitch:300, w:24, h:43, draw:drawSkeleton},
   {id:'troll', name:'Troll', likes:['eye','worm'], hates:['bear','floss'], cry:'GRONK!', col:'#a8e070', pitch:55, w:32, h:46, draw:drawTroll},
   {id:'goblin', name:'Gobelin', likes:['licorice','peach'], hates:['eye','lolly'], cry:'GRRR! MES SOUS!', col:C.bile, pitch:240, w:24, h:37, draw:drawGoblin},
 ];
 
-/* ---------- Scenery: built once per resize at screen resolution ---------- */
+/* ---------- Bosses: bigger creatures that guard the end of each world ---------- */
+function bossLegs(p, col, hip, spread, w, boot) {
+  const s = Math.sin(p), a = s * 6, l1 = Math.max(0, s) * 3, l2 = Math.max(0, -s) * 3;
+  limb(-spread, -hip, -spread - a, -l2 - 3, w, col); rrect(-spread - a - 4, -l2 - 4.5, 10, 4.5, 1.8); sh(boot);
+  limb(spread, -hip, spread + a, -l1 - 3, w, col); rrect(spread + a - 4, -l1 - 4.5, 10, 4.5, 1.8); sh(boot);
+}
+function drawFrank(p, o) {
+  const sw = Math.sin(T * 1.6 + o.seed);
+  bossLegs(p, '#262a44', 28, 6, 8, '#0a0a12');
+  limb(-4, -52, 22, -48 + sw, 6.5, '#262838'); ell(24.5, -48 + sw, 3.8, 3.4, '#5f9a3a');
+  // torn coat over a grey-green shirt
+  poly([-15, -57, 15, -57, 14, -24, 11, -21, 8, -25, 4, -21, 0, -25, -4, -21, -8, -25, -11, -21, -14, -24], lg(0, -57, 0, -21, ['#3e4058', '#1c1e2e']));
+  poly([-4, -57, 4, -57, 2.5, -30, -2.5, -30], '#5a6a48', false);
+  line(-4, -57, -2.5, -30, OUT, .8); line(4, -57, 2.5, -30, OUT, .8);
+  rrect(-14.5, -35, 29, 3.6, .6); sh('#3a2412', .8); rrect(-2, -35.4, 4, 4.4, .6); sh('#9aa0b0', .6);
+  line(-12, -50, -7, -44, '#5a5c78', .7); for (let k = 0; k < 3; k++) line(-11.6 + k * 1.8, -46.4 + k * 1.6, -9.6 + k * 1.8, -48.6 + k * 1.6, '#5a5c78', .5);
+  // front arm reaching out
+  limb(5, -53, 27, -44 - sw, 7, '#2e3048'); ell(29.5, -44 - sw, 4.2, 3.8, '#6fb042');
+  for (let k = -1; k <= 1; k++) line(31, -44 - sw + k * 2, 34, -44.5 - sw + k * 2.4, '#6fb042', 1.4);
+  // neck bolts
+  rrect(-4.5, -62, 11, 7, 1); sh('#5f9a3a');
+  rrect(-9, -61, 4.5, 3.2, .8); sh('#a0a8b8'); rrect(6.5, -61, 4.5, 3.2, .8); sh('#a0a8b8');
+  // flat-topped head
+  rrect(-8, -81, 19, 21, 3); sh(lg(0, -81, 0, -60, ['#b4ec7a', '#74ae4a', '#4a7a30']));
+  poly([-9, -78, -9, -84, 12, -84, 12, -78, 9.5, -75, 7, -77.5, 4, -74.5, 1, -77, -2, -75, -5, -77.5], '#0a0c10');
+  line(0, -72, 11, -72, '#24341a', 2.4);
+  glowEye(8, -69.6, 1.5, C.bile, 8); glowEye(3, -69.6, 1.3, C.bile, 8);
+  line(-6, -74.5, 0, -73.6, '#3a2020', .8);
+  for (let k = 0; k < 4; k++) line(-5.4 + k * 1.6, -75.6, -5.2 + k * 1.6, -72.6, '#3a2020', .5);
+  ell(10.4, -66.5, 1.2, 1.8, '#5a9a3a');
+  line(3, -63.4, 10.5, -63.8, '#1a2a10', 1.2);
+  for (let k = 0; k < 3; k++) line(4.5 + k * 2.4, -64.6, 4.6 + k * 2.4, -62.4, '#1a2a10', .5);
+}
+function drawWitch(p, o) {
+  const sw = Math.sin(p) * 2.5, flut = Math.sin(T * 4 + o.seed), b = -Math.abs(Math.sin(p)) * 1.2;
+  // broom slung across her back
+  limb(-24, -12, 10, -50 + b, 2.2, '#7a4a22');
+  poly([-22, -15, -34, -3, -31, -6, -36, -8, -27, -17], '#d8b050');
+  // pointed shoes
+  poly([-6 - sw, 0, 2 - sw, 0, 5 - sw, -2.5, -5 - sw, -3], '#120a1a');
+  poly([2 + sw, 0, 10 + sw, 0, 13 + sw, -2.5, 3 + sw, -3], '#120a1a');
+  // robe with a ragged hem
+  ctx.beginPath(); ctx.moveTo(-7, -56 + b); ctx.lineTo(-17 - flut, -3);
+  for (let i = 1; i <= 8; i++) ctx.lineTo(-17 - flut + i * (34 + flut * 2) / 8, i % 2 ? -7 : -2.5);
+  ctx.lineTo(9, -56 + b); ctx.closePath(); sh(lg(-16, 0, 16, 0, ['#160822', '#3e1a60', '#22103a']));
+  rrect(-9, -38 + b, 19, 3.4, 1); sh(C.toxic, .7);
+  // clawed hand reaching out
+  limb(4, -50 + b, 22, -42 + sw * .4, 4.6, '#2e1448'); ell(24, -42 + sw * .4, 2.6, 2.2, '#8fd060');
+  for (let k = -1; k <= 1; k++) line(25, -42 + sw * .4 + k * 1.6, 29.5, -43.5 + sw * .4 + k * 2.4, '#8fd060', .9);
+  // straggly grey hair, green face, hooked nose with a wart
+  poly([-3, -66 + b, -12, -52 + flut + b, -9, -46 + b, -6, -54 + b, -3, -48 + b, -1, -58 + b], '#9a9ab4');
+  ell(3, -62 + b, 6.5, 7, lg(0, -69, 0, -55, ['#b4ec7a', '#6aa840']));
+  poly([7.5, -64 + b, 16, -58 + b, 8.5, -59 + b], '#9ad86a');
+  ell(12.6, -60 + b, .9, .9, '#4a7a30');
+  glowEye(6.4, -64 + b, 1.3, C.hot, 8); glowEye(2.4, -64 + b, 1.1, C.hot, 8);
+  ctx.beginPath(); ctx.arc(5, -57.4 + b, 3, .1, Math.PI - .5); ctx.closePath(); ctx.fillStyle = '#24060c'; ctx.fill();
+  poly([4, -57 + b, 4.8, -55.4 + b, 5.6, -57 + b], '#f6f0d8', false);
+  // hat: wide brim, tall cone bent backwards
+  ell(3, -68 + b, 13, 2.6, '#140820');
+  poly([-5, -68.5 + b, 11, -68.5 + b, 5, -82 + b, 0, -90 + b, -9 - flut, -95 + b, -3, -84 + b], lg(0, -95, 0, -68, ['#2a1040', '#140820']));
+  rrect(-4.5, -72.5 + b, 14.5, 3.4, .5); sh(C.hot, .6);
+  rrect(1.5, -73 + b, 3.6, 4.4, .5); sh('#e8c050', .6);
+}
+function drawPumpkinKing(p, o) {
+  const sw = Math.sin(T * 1.8 + o.seed), flick = .8 + Math.sin(T * 17 + o.seed) * .2;
+  // royal cape
+  poly([-9, -60, -24 - sw * 1.5, -4, -8, -8, 6, -60], lg(-20, 0, 6, 0, ['#14041c', '#3a0a4a']));
+  poly([-9, -60, -15 - sw, -6, -11, -8], C.blood, false);
+  bossLegs(p, '#2e6a1e', 26, 5.5, 5, '#1a2a0c');
+  rrect(-12, -60, 24, 34, 6); sh(lg(0, -60, 0, -26, ['#6a1a8a', '#2a0a3a']));
+  line(0, -60, 0, -27, '#e8c050', 1.2);
+  for (let k = 0; k < 3; k++) ell(3, -54 + k * 8, 1, 1, '#e8c050', 0, false);
+  rrect(-12.5, -34, 25, 3.4, .5); sh('#e8c050', .6);
+  // vine arm with a leaf and curly fingers
+  ctx.beginPath(); ctx.moveTo(6, -54); ctx.bezierCurveTo(16, -60, 22, -46 + sw, 31, -48 + sw);
+  ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 5.4; ctx.stroke(); ctx.strokeStyle = '#3a8a20'; ctx.lineWidth = 3.4; ctx.stroke();
+  ell(18, -55, 3.6, 1.8, '#5ac030', -.6);
+  for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.arc(33, -48 + sw + k * 2.4, 1.6, -1.6, 1.6); ctx.strokeStyle = '#3a8a20'; ctx.lineWidth = 1.1; ctx.stroke(); }
+  // pumpkin head with a carved glowing face
+  ell(3, -73, 13.5, 11.5, rg(-2, -78, 2, 16, ['#ffc060', '#ff8a1f', '#a84000']));
+  ctx.strokeStyle = 'rgba(140,50,0,.6)'; ctx.lineWidth = .8;
+  [5.5, 10].forEach(rx => { ctx.beginPath(); ctx.ellipse(3, -73, rx, 11.3, 0, 0, TAU); ctx.stroke(); });
+  ctx.save(); ctx.shadowColor = '#ffb020'; ctx.shadowBlur = 10 * K * flick;
+  poly([4, -79, 8, -75, 2, -74.5], '#fff070', false); poly([10, -79, 14, -75, 9, -74.6], '#fff070', false);
+  poly([0, -69, 15, -69.5, 13.5, -65, 11, -66.6, 9, -63.8, 7, -66.4, 4.5, -64, 2, -66.6], '#fff070', false);
+  ctx.restore();
+  // crown
+  poly([-6, -83, -7, -90, -3, -86.5, 1, -92.5, 5, -86.5, 9, -90, 8, -83], lg(0, -92, 0, -83, ['#fff0a0', '#e8b030', '#a87010']));
+  ell(1, -86.4, 1, 1, C.blood, 0, false); ell(-4, -85.6, .8, .8, C.acid, 0, false); ell(6, -85.6, .8, .8, C.acid, 0, false);
+}
+const BOSSES = [
+  {id:'frank', name:'Frankenstein', likes:['choco','bear'], hates:['lolly'], need:3, cry:'RRRAAAH!', col:C.toxic, pitch:45, w:40, h:84, draw:drawFrank},
+  {id:'witch', name:'La sorcière', likes:['licorice','floss'], hates:['peach'], need:4, cry:'HI HI HIII!', col:C.hot, pitch:330, w:38, h:92, draw:drawWitch},
+  {id:'pumpking', name:'Le roi citrouille', likes:['lolly','peach','choco'], hates:['eye','bear'], need:5, cry:'GROOOOM!', col:C.orange, pitch:40, w:42, h:92, draw:drawPumpkinKing},
+];
+
+/* ---------- Worlds: 3 levels each, the 3rd ends with the boss ---------- */
+const spI = id => SPECIES.findIndex(s => s.id === id);
+const WORLDS = [
+  {name:'Le cimetière', boss:0, sp:[['zombie', 'mummy'], ['skeleton'], ['ghost']], c:[['choco', 'lolly'], ['eye'], ['bear']]},
+  {name:'La forêt des ténèbres', boss:1, sp:[['wolf', 'goblin'], ['vampire'], ['troll']], c:[['worm', 'licorice'], ['peach'], ['floss']]},
+  {name:'Le château maudit', boss:2, all:true},
+];
+const NW = WORLDS.length;
+function stageOf(n) { const w = Math.floor((n - 1) / 3); return {num: w + 1, wi: w % NW, cycle: Math.floor(w / NW), stage: (n - 1) % 3 + 1}; }
+const fmtLevel = n => { const s = stageOf(n); return s.num + '-' + s.stage; };
+function worldLists(n) {
+  const s = stageOf(n), wd = WORLDS[s.wi];
+  if (wd.all) return {sp: SPECIES.map((_, i) => i), c: CANDIES.map((_, i) => i), newSp: [], newC: []};
+  const upto = s.cycle ? 3 : s.stage;
+  return {
+    sp: wd.sp.slice(0, upto).flat().map(spI), c: wd.c.slice(0, upto).flat().map(id => CI[id]),
+    newSp: s.cycle ? [] : wd.sp[s.stage - 1].map(spI), newC: s.cycle ? [] : wd.c[s.stage - 1].map(id => CI[id]),
+  };
+}
+
+/* ---------- Scenery: one look per world, built once per resize at screen resolution ---------- */
+let THEME = 0;
 const TREES = [[0, 150], [1, 420], [2, 250], [3, 470], [1, 90]];
 const STONES = [];
 const CANDLES = [];
@@ -386,6 +503,25 @@ const CROWS = [];
     }
   }
 })();
+// forest and castle props, plus the lights that flicker on top of them
+const PROPS = [STONES, [], []], LIGHTS = [CANDLES, [], []];
+(function layoutWorlds() {
+  const R = rng(57);
+  for (let l = 0; l < NL; l++) {
+    const by = laneTop(l) + 34;
+    for (let x = 60 + R() * 20; x < 540; x += 38 + R() * 44) {
+      const t = ['tree', 'mush', 'stump', 'bush', 'mush', 'rock'][(R() * 6) | 0], s = .8 + R() * .4, col = [C.toxic, C.acid, C.hot][(R() * 3) | 0];
+      PROPS[1].push({l, x, t, s, col});
+      if (t === 'mush') LIGHTS[1].push({x, y: by - 5 * s, col, ph: R() * 6});
+    }
+    for (let x = 64 + R() * 20; x < 540; x += 40 + R() * 46) {
+      const t = ['pillar', 'candelabra', 'armor', 'broken', 'candelabra', 'skulls'][(R() * 6) | 0], s = .85 + R() * .3;
+      PROPS[2].push({l, x, t, s});
+      if (t === 'candelabra') [[-5, -21.5], [0, -24.5], [5, -21.5]].forEach(([d, h]) => LIGHTS[2].push({x: x + d * s, y: by + h * s, col: C.orange, ph: R() * 6}));
+    }
+  }
+})();
+function setTheme(t) { if (THEME === t) return; THEME = t; if (cv.width > 2) buildScenery(); }
 function drawStone(st, R) {
   const by = laneTop(st.l) + 34;
   ctx.save(); ctx.translate(st.x, by); ctx.rotate(st.tilt); ctx.scale(st.s, st.s);
@@ -406,6 +542,70 @@ function drawStone(st, R) {
   if (st.t === 'round' || st.t === 'broken') { ctx.font = '700 4px ' + FONT.ui; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(2,3,10,.7)'; ctx.fillText('R.I.P', 0, -8); }
   ctx.restore();
 }
+function drawForestProp(p, R) {
+  const by = laneTop(p.l) + 34;
+  if (p.t === 'tree') { ell(p.x, by, 11, 2.2, 'rgba(0,0,0,.5)', 0, false); deadTree(p.x, by, 15 * p.s, -Math.PI / 2 + (R() - .5) * .2, 6.5, 4, R); return; }
+  ctx.save(); ctx.translate(p.x, by); ctx.scale(p.s, p.s);
+  ell(0, 0, 9, 2, 'rgba(0,0,0,.5)', 0, false);
+  if (p.t === 'mush') {
+    [[-4.5, .7], [1, 1], [5.5, .6]].forEach(([dx, s]) => {
+      rrect(dx - 1.2 * s, -6 * s, 2.4 * s, 6 * s, .8); sh('#e0d8c8', .7);
+      ctx.beginPath(); ctx.ellipse(dx, -6 * s, 4 * s, 3.2 * s, 0, Math.PI, 0); ctx.closePath();
+      sh(lg(dx, -9.2 * s, dx, -6 * s, ['#ffffff', p.col, '#14301a']), .8);
+      ell(dx - 1.4 * s, -7.4 * s, .6 * s, .5 * s, 'rgba(255,255,255,.85)', 0, false); ell(dx + 1.4 * s, -8 * s, .5 * s, .4 * s, 'rgba(255,255,255,.85)', 0, false);
+    });
+  } else if (p.t === 'stump') {
+    poly([-7, 0, -5, -2, 5, -2, 7, 0], '#3a2414');
+    rrect(-5, -9, 10, 8, 1); sh(lg(-5, 0, 5, 0, ['#5a3a20', '#3a2414', '#24160c']));
+    ell(0, -9, 5, 1.7, '#a0784a');
+    [3.4, 2, .8].forEach(r => { ctx.beginPath(); ctx.ellipse(0, -9, r, r * .34, 0, 0, TAU); ctx.strokeStyle = '#6a4826'; ctx.lineWidth = .4; ctx.stroke(); });
+  } else if (p.t === 'bush') {
+    [[-5, -4, 4.2], [5, -4, 4.2], [0, -6.5, 5], [1.5, -2.5, 4]].forEach(([a, b, r]) => ell(a, b, r, r * .9, '#0e2a24'));
+    [[-5, -4, 4.2], [5, -4, 4.2], [0, -6.5, 5], [1.5, -2.5, 4]].forEach(([a, b, r]) => ell(a, b, r - .5, r * .9 - .5, lg(0, b - r, 0, b + r, ['#1e4a3a', '#0e2a24']), 0, false));
+    [[-3, -7], [3, -5], [-6, -3], [6, -6]].forEach(([a, b]) => ell(a, b, .7, .7, C.blood, 0, false));
+  } else if (p.t === 'rock') {
+    poly([-7, 0, -6.5, -5, -2, -8, 3, -7.5, 7, -3.5, 7.5, 0], lg(-6, -8, 6, 0, ['#5a6080', '#2e3250', '#181a2e']));
+    ell(-2, -6.6, 2.6, 1, 'rgba(70,160,90,.8)', -.2, false); ell(3, -6.4, 1.8, .7, 'rgba(70,160,90,.8)', .3, false);
+  }
+  ctx.restore();
+}
+function drawCastleProp(p) {
+  const by = laneTop(p.l) + 34;
+  ctx.save(); ctx.translate(p.x, by); ctx.scale(p.s, p.s);
+  ell(0, 0, 10, 2, 'rgba(0,0,0,.55)', 0, false);
+  const stone = lg(-5, 0, 5, 0, ['#7a6a8a', '#4a3e5c', '#2a2238']);
+  if (p.t === 'pillar' || p.t === 'broken') {
+    rrect(-6.5, -3, 13, 3, .5); sh('#4a3e5c', .8);
+    if (p.t === 'pillar') {
+      rrect(-4.5, -31, 9, 28, .5); sh(stone, .9);
+      for (let k = -2; k <= 2; k += 2) line(k, -30, k, -4, 'rgba(20,14,30,.6)', .5);
+      rrect(-6.5, -34, 13, 3, .5); sh('#5a4c6c', .8);
+    } else {
+      poly([-4.5, -3, -4.5, -15, -2, -18, 0, -14.5, 2.5, -19, 4.5, -16, 4.5, -3], stone);
+      for (let k = -2; k <= 2; k += 2) line(k, -14, k, -4, 'rgba(20,14,30,.6)', .5);
+      poly([7, 0, 9, -3, 12, -2.4, 11.5, 0], '#4a3e5c');
+    }
+  } else if (p.t === 'candelabra') {
+    poly([-4, 0, 4, 0, 1.2, -3, -1.2, -3], '#c8a040');
+    limb(0, -3, 0, -16, 1.2, '#c8a040');
+    ctx.beginPath(); ctx.moveTo(-5, -16); ctx.quadraticCurveTo(0, -11, 5, -16);
+    ctx.strokeStyle = OUT; ctx.lineWidth = 2.6; ctx.stroke(); ctx.strokeStyle = '#c8a040'; ctx.lineWidth = 1.2; ctx.stroke();
+    [[-5, -20.5, 4], [0, -23.5, 7.5], [5, -20.5, 4]].forEach(([a, b, h]) => { rrect(a - 1, b, 2, h, .4); sh('#f0e8d8', .5); ell(a, b + h, 1.8, .6, '#c8a040'); });
+  } else if (p.t === 'armor') {
+    limb(7, -34, 7, 0, 1, '#8a6a40'); poly([7, -38, 8.6, -34, 5.4, -34], '#c0c8d8');
+    limb(-2, -11, -2.4, -1, 2.6, '#7a82a0'); limb(2, -11, 2.4, -1, 2.6, '#7a82a0');
+    poly([-5, -24, 5, -24, 4, -11, -4, -11], lg(-5, 0, 5, 0, ['#d8e0f0', '#8a92b0', '#4a5270']));
+    limb(4.5, -22, 7, -15, 2.2, '#8a92b0');
+    ell(0, -28, 4, 4.4, lg(-4, 0, 4, 0, ['#e0e8f8', '#8a92b0', '#4a5270']));
+    line(-2.6, -28.2, 3.8, -28.2, OUT, 1);
+    ctx.beginPath(); ctx.moveTo(0, -32); ctx.quadraticCurveTo(-5, -36, -7, -31); ctx.strokeStyle = C.blood; ctx.lineWidth = 1.8; ctx.stroke();
+  } else if (p.t === 'skulls') {
+    [[-4, -2.4], [4, -2.4], [0, -2.6], [-2, -6.2], [2, -6.4], [0, -9.8]].forEach(([a, b]) => {
+      ell(a, b, 2.6, 2.3, '#e8e0cc'); ell(a - .9, b - .1, .7, .8, OUT, 0, false); ell(a + .9, b - .1, .7, .8, OUT, 0, false);
+    });
+  }
+  ctx.restore();
+}
 function deadTree(x, y, len, ang, w, depth, R) {
   const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
   ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2);
@@ -415,13 +615,7 @@ function deadTree(x, y, len, ang, w, depth, R) {
   const n = 2 + (R() < .4 ? 1 : 0);
   for (let i = 0; i < n; i++) deadTree(x2, y2, len * (.6 + R() * .2), ang + (R() - .5) * 1.4, w * .62, depth - 1, R);
 }
-const BG = document.createElement('canvas'), VIG = document.createElement('canvas'), FOG = document.createElement('canvas');
-function buildScenery() {
-  [BG, VIG].forEach(c => { c.width = cv.width; c.height = cv.height; });
-  const prev = ctx;
-  ctx = BG.getContext('2d'); ctx.setTransform(K, 0, 0, K, 0, 0);
-  const R = rng(21);
-  // sky
+function skyCemetery(R) {
   ctx.fillStyle = lg(0, 0, 0, 90, ['#010208', '#070f2e', '#13285e']); ctx.fillRect(0, 0, W, 90);
   for (let i = 0; i < 140; i++) { ctx.globalAlpha = .3 + R() * .7; ell(R() * W, 16 + R() * 60, R() * .6 + .2, R() * .6 + .2, R() < .1 ? C.acid : '#dfe6ff', 0, false); }
   ctx.globalAlpha = 1;
@@ -444,39 +638,116 @@ function buildScenery() {
   for (let x = 0; x < W; x += 6) { ctx.fillStyle = '#02040c'; ctx.fillRect(x, 70, 1.2, 10); poly([x - .6, 70, x + .6, 66.5, x + 1.8, 70], '#02040c', false); }
   ctx.fillRect(0, 72, W, 1); ctx.fillRect(0, 77, W, 1);
   [[40, 78], [320, 78], [600, 78]].forEach(([x, y]) => deadTree(x, y, 10, -Math.PI / 2, 3, 4, R));
+}
+function skyForest(R) {
+  ctx.fillStyle = lg(0, 0, 0, 90, ['#020108', '#0e0624', '#2a1248']); ctx.fillRect(0, 0, W, 90);
+  for (let i = 0; i < 70; i++) { ctx.globalAlpha = .3 + R() * .6; ell(R() * W, 10 + R() * 50, R() * .5 + .2, R() * .5 + .2, '#e8dcff', 0, false); }
+  ctx.globalAlpha = 1;
+  // blood-orange moon low over the trees
+  ctx.fillStyle = rg(120, 46, 8, 90, ['rgba(255,150,60,.35)', 'rgba(180,60,40,.12)', 'rgba(0,0,0,0)']); ctx.fillRect(0, 0, 260, 100);
+  ell(120, 46, 24, 24, rg(112, 38, 4, 26, ['#fff0c0', '#ffb060', '#c85a20']), 0, false);
+  [[-7, -4, 4], [8, 6, 3.5], [3, -10, 2.5]].forEach(([a, b, r]) => ell(120 + a, 46 + b, r, r, 'rgba(160,70,20,.35)', 0, false));
+  [[90, 40, 70, 3], [160, 54, 60, 3]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(14,6,36,.85)', 0, false));
+  // two rows of pines on the horizon
+  [['#0c0820', 22, 9], ['#05040e', 30, 13]].forEach(([col, hmax, step]) => {
+    ctx.fillStyle = col; ctx.fillRect(0, 76, W, 6);
+    for (let x = -6; x < W + 8; x += step * (.6 + R() * .6)) { const h = hmax * (.5 + R() * .6); poly([x - step * .55, 80, x, 80 - h, x + step * .55, 80], col, false); }
+  });
+}
+function skyCastle(R) {
+  ctx.fillStyle = lg(0, 0, 0, 90, ['#0a0206', '#2a0612', '#5a0e1e']); ctx.fillRect(0, 0, W, 90);
+  for (let i = 0; i < 40; i++) { ctx.globalAlpha = .2 + R() * .5; ell(R() * W, 8 + R() * 40, R() * .5 + .2, R() * .5 + .2, '#ffd8d8', 0, false); }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = rg(540, 34, 10, 90, ['rgba(255,120,120,.3)', 'rgba(160,20,40,.1)', 'rgba(0,0,0,0)']); ctx.fillRect(420, 0, 220, 90);
+  ell(540, 34, 22, 22, rg(534, 28, 3, 24, ['#fff0f0', '#ffa0a0', '#c04050']), 0, false);
+  [[520, 40, 60, 3], [580, 26, 50, 2.5]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(30,4,12,.85)', 0, false));
+  // the castle on its hill
+  const c = '#0a030a';
+  ctx.fillStyle = '#12050c'; ctx.beginPath(); ctx.moveTo(0, 82); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, 76 - Math.max(0, 14 - Math.abs(x - 320) / 12) - Math.sin(x / 37) * 1.5); ctx.lineTo(W, 82); ctx.fill();
+  ctx.fillStyle = c;
+  ctx.fillRect(262, 46, 116, 22);
+  [[232, 36, 22], [386, 34, 22], [300, 28, 13], [334, 24, 15]].forEach(([x, top, w]) => {
+    ctx.fillRect(x, top, w, 68 - top);
+    for (let k = 0; k < w; k += 5) ctx.fillRect(x + k, top - 3, 3, 3);
+    poly([x - 2, top - 3, x + w / 2, top - 3 - w * .75, x + w + 2, top - 3], c, false);
+  });
+  for (let k = 262; k < 378; k += 6) ctx.fillRect(k, 43, 4, 3);
+  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 6 * K; ctx.fillStyle = '#ffb030';
+  [[241, 42], [395, 40], [305, 34], [340, 31], [282, 52], [300, 54], [350, 52], [366, 54], [241, 54], [395, 54]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, b + 6); ctx.lineTo(a, b + 1.6); ctx.arc(a + 1.6, b + 1.6, 1.6, Math.PI, 0); ctx.lineTo(a + 3.2, b + 6); ctx.fill(); });
+  ctx.restore();
+  ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(308, 68); ctx.lineTo(308, 61); ctx.arc(320, 61, 12, Math.PI, 0); ctx.lineTo(332, 68); ctx.fill();
+}
+const BG = document.createElement('canvas'), VIG = document.createElement('canvas'), FOG = document.createElement('canvas');
+const GROUND = [
+  {g: ['#0e1a40', '#0a1230', '#050818'], blade: ['#16265a', '#0c1636'], path: ['#33406e', '#1f2648', '#141a36'], edge: 'rgba(150,180,255,.25)', peb: ['#3d4a80', '#0e1330'], pud: 'rgba(46,242,255,.18)'},
+  {g: ['#0a1c18', '#071412', '#030a08'], blade: ['#14362c', '#0a2018'], path: ['#3e3024', '#2a201a', '#1a1410'], edge: 'rgba(220,170,120,.22)', peb: ['#5a4632', '#120c08'], pud: 'rgba(125,255,58,.14)'},
+  {g: ['#1c1622', '#141018', '#0a080e']},
+];
+function buildScenery() {
+  [BG, VIG].forEach(c => { c.width = cv.width; c.height = cv.height; });
+  const prev = ctx, th = THEME, gr = GROUND[th];
+  ctx = BG.getContext('2d'); ctx.setTransform(K, 0, 0, K, 0, 0);
+  const R = rng(21 + th * 100);
+  [skyCemetery, skyForest, skyCastle][th](R);
   // ground
-  ctx.fillStyle = lg(0, 78, 0, 340, ['#0e1a40', '#0a1230', '#050818']); ctx.fillRect(0, 78, W, 262);
-  for (let i = 0; i < 700; i++) { const x = R() * W, y = 82 + R() * 250; line(x, y, x + (R() - .5) * 1.5, y - 1.5 - R() * 2, R() < .5 ? '#16265a' : '#0c1636', .6); }
-  // paths
+  ctx.fillStyle = lg(0, 78, 0, 340, gr.g); ctx.fillRect(0, 78, W, 262);
+  if (th < 2) for (let i = 0; i < 700; i++) { const x = R() * W, y = 82 + R() * 250; line(x, y, x + (R() - .5) * 1.5, y - 1.5 - R() * 2, R() < .5 ? gr.blade[0] : gr.blade[1], .6); }
+  else for (let r = 0, y = 82; y < 334; r++, y += 12) {
+    // flagstone floor
+    line(0, y, W, y, 'rgba(0,0,0,.55)', .7); line(0, y + .8, W, y + .8, 'rgba(160,120,200,.07)', .5);
+    for (let x = (r % 2) * 13 + R() * 4; x < W; x += 24 + R() * 6) line(x, y, x, y + 12, 'rgba(0,0,0,.5)', .6);
+  }
+  // paths (a red carpet runner in the castle)
   for (let l = 0; l < NL; l++) {
-    const y0 = laneTop(l) + 38;
-    const top = x => y0 + Math.sin(x / 37 + l * 2) * 1.6, bot = x => y0 + 14 + Math.sin(x / 29 + l) * 1.6;
+    const y0 = laneTop(l) + 38, wob = th === 2 ? 0 : 1.6;
+    const top = x => y0 + Math.sin(x / 37 + l * 2) * wob, bot = x => y0 + 14 + Math.sin(x / 29 + l) * wob;
     ctx.beginPath(); ctx.moveTo(0, top(0));
     for (let x = 0; x <= 600; x += 4) ctx.lineTo(x, top(x));
     ctx.quadraticCurveTo(612, y0 + 7, 600, bot(600));
     for (let x = 600; x >= 0; x -= 4) ctx.lineTo(x, bot(x));
     ctx.closePath();
-    ctx.fillStyle = lg(0, y0, 0, y0 + 14, ['#33406e', '#1f2648', '#141a36']); ctx.fill();
-    ctx.strokeStyle = 'rgba(150,180,255,.25)'; ctx.lineWidth = .8; ctx.beginPath(); for (let x = 0; x <= 600; x += 4) ctx.lineTo(x, top(x)); ctx.stroke();
-    for (let k = 0; k < 60; k++) ell(R() * 590, y0 + 3 + R() * 9, .4 + R() * 1.2, .3 + R() * .6, R() < .5 ? '#3d4a80' : '#0e1330', 0, false);
-    for (let k = 0; k < 3; k++) { const px = 80 + R() * 440; ell(px, y0 + 8, 5 + R() * 5, 1.4, 'rgba(46,242,255,.18)', 0, false); }
+    if (th === 2) {
+      ctx.fillStyle = lg(0, y0, 0, y0 + 14, ['#9a1828', '#6a0c1a', '#3a0610']); ctx.fill();
+      line(0, y0 + 1.6, 600, y0 + 1.6, '#e8c050', .7); line(0, y0 + 12.4, 600, y0 + 12.4, '#e8c050', .7);
+      for (let x = 12; x < 600; x += 18) poly([x, y0 + 4.5, x + 2.5, y0 + 7, x, y0 + 9.5, x - 2.5, y0 + 7], 'rgba(232,192,80,.45)', false);
+      continue;
+    }
+    ctx.fillStyle = lg(0, y0, 0, y0 + 14, gr.path); ctx.fill();
+    ctx.strokeStyle = gr.edge; ctx.lineWidth = .8; ctx.beginPath(); for (let x = 0; x <= 600; x += 4) ctx.lineTo(x, top(x)); ctx.stroke();
+    for (let k = 0; k < 60; k++) ell(R() * 590, y0 + 3 + R() * 9, .4 + R() * 1.2, .3 + R() * .6, R() < .5 ? gr.peb[0] : gr.peb[1], 0, false);
+    for (let k = 0; k < 3; k++) { const px = 80 + R() * 440; ell(px, y0 + 8, 5 + R() * 5, 1.4, gr.pud, 0, false); }
   }
-  // the forest of darkness, crowding the left edge
+  // darkness crowding the left edge
   ctx.fillStyle = lg(0, 0, 90, 0, ['rgba(0,0,4,.95)', 'rgba(0,0,4,.55)', 'rgba(0,0,4,0)']); ctx.fillRect(0, 60, 90, 280);
-  [[6, 120], [26, 96], [14, 190], [32, 250], [4, 300], [22, 330]].forEach(([x, y]) => deadTree(x, y, 18, -Math.PI / 2 + (R() - .5) * .3, 6, 5, R));
-  // stones, trees, graves (in lane order so lower rows overlap upper ones)
+  if (th < 2) [[6, 120], [26, 96], [14, 190], [32, 250], [4, 300], [22, 330]].forEach(([x, y]) => deadTree(x, y, 18, -Math.PI / 2 + (R() - .5) * .3, 6, 5, R));
+  // props and spawn points, in lane order so lower rows overlap upper ones
   for (let l = 0; l < NL; l++) {
-    TREES.filter(t => t[0] === l).forEach(([, x]) => { const by = laneTop(l) + 34; ell(x, by, 10, 2, 'rgba(0,0,0,.5)', 0, false); deadTree(x, by, 14, -Math.PI / 2 + (R() - .5) * .2, 5, 4, R); });
-    STONES.filter(s => s.l === l).forEach(s => drawStone(s, R));
     const gy = feetY(l);
-    // open grave at the start of each path
-    ctx.save(); ctx.translate(8, gy - 22);
-    rrect(-2, -14, 14, 16, 5); sh(lg(0, -14, 0, 2, ['#5a6a9a', '#232b52']), 1);
-    ctx.font = '700 4px ' + FONT.ui; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(2,3,10,.7)'; ctx.fillText('R.I.P', 5, -8);
-    ctx.restore();
-    ell(20, gy - 1, 16, 5.5, '#2a1d26');
+    if (th === 0) {
+      TREES.filter(t => t[0] === l).forEach(([, x]) => { const by = laneTop(l) + 34; ell(x, by, 10, 2, 'rgba(0,0,0,.5)', 0, false); deadTree(x, by, 14, -Math.PI / 2 + (R() - .5) * .2, 5, 4, R); });
+      STONES.filter(s => s.l === l).forEach(s => drawStone(s, R));
+      // open grave at the start of each path
+      ctx.save(); ctx.translate(8, gy - 22);
+      rrect(-2, -14, 14, 16, 5); sh(lg(0, -14, 0, 2, ['#5a6a9a', '#232b52']), 1);
+      ctx.font = '700 4px ' + FONT.ui; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(2,3,10,.7)'; ctx.fillText('R.I.P', 5, -8);
+      ctx.restore();
+    } else if (th === 1) {
+      PROPS[1].filter(p => p.l === l).forEach(p => drawForestProp(p, R));
+      // a hollow stump marks each burrow
+      ctx.save(); ctx.translate(10, gy - 8);
+      rrect(-6, -12, 12, 12, 1.5); sh(lg(-6, 0, 6, 0, ['#5a3a20', '#3a2414', '#24160c']));
+      ell(0, -12, 6, 2, '#a0784a'); ell(0, -12, 3.6, 1.2, '#140c06', 0, false);
+      ctx.restore();
+    } else {
+      PROPS[2].filter(p => p.l === l).forEach(p => drawCastleProp(p));
+      // a trapdoor lid propped open behind each hole
+      poly([9, gy - 4, 13, gy - 22, 33, gy - 22, 31, gy - 4], lg(0, gy - 22, 0, gy - 4, ['#6a4422', '#3a2412']));
+      for (let k = 0; k < 3; k++) line(15 + k * 6, gy - 21, 13.6 + k * 6, gy - 5, 'rgba(0,0,0,.5)', .6);
+      line(12.4, gy - 13, 32, gy - 13, '#2a2a30', 1.2);
+    }
+    ell(20, gy - 1, 16, 5.5, ['#2a1d26', '#20160e', '#2a2230'][th]);
     ell(20, gy - 1.5, 12, 3.8, '#010104', 0, false);
-    for (let k = 0; k < 8; k++) ell(6 + R() * 28, gy - 2 + R() * 6, 1 + R() * 1.5, .8 + R(), '#3a2a30', 0, false);
+    for (let k = 0; k < 8; k++) ell(6 + R() * 28, gy - 2 + R() * 6, 1 + R() * 1.5, .8 + R(), ['#3a2a30', '#3a2a1a', '#3a3040'][th], 0, false);
   }
   // right edge: where the hero stands
   ctx.fillStyle = 'rgba(2,4,12,.35)'; ctx.fillRect(PATH_X1 + 40, 80, W, 252);
@@ -540,6 +811,16 @@ const sfx = {
   },
   level: () => { [67, 72, 76, 79, 84].forEach((m, i) => tone(mf(m), mf(m), .12, 'square', .055, i * .09)); [72, 76, 79].forEach(m => tone(mf(m), mf(m), .5, 'triangle', .05, .5)); },
   hiscore: () => [76, 79, 84, 88, 91, 96].forEach((m, i) => tone(mf(m), mf(m), .09, 'square', .045, i * .07)),
+  roar: () => { tone(90, 38, .9, 'sawtooth', .14); noise(.8, .16, 'lowpass', 700, 90); },
+  thud: () => { tone(90, 38, .3, 'sine', .32); noise(.25, .14, 'lowpass', 300, 70); },
+  bossIn: () => {
+    tone(55, 38, 2.6, 'sine', .4); tone(110, 52, 2.2, 'sawtooth', .1); noise(1.8, .22, 'lowpass', 500, 50);
+    [45, 44].forEach((m, i) => tone(mf(m), mf(m), 1.2, 'square', .05, .4 + i * .6));
+  },
+  bossWin: () => {
+    [62, 66, 69, 74, 78, 81, 86].forEach((m, i) => tone(mf(m), mf(m), .14, 'square', .05, i * .08));
+    [74, 78, 81, 86].forEach(m => tone(mf(m), mf(m), 1.1, 'triangle', .05, .6));
+  },
   select: () => tone(900, 900, .03, 'square', .03),
   type: () => tone(1200, 1000, .03, 'square', .03),
 };
@@ -552,7 +833,11 @@ const LEAD = [
   null, null, null, null,
   {0: 74, 4: 72, 6: 69, 10: 72, 12: 74}, {0: 77, 4: 74, 8: 72, 12: 69}, {0: 70, 4: 69, 6: 70, 8: 72, 12: 74}, {0: 73, 4: 76, 8: 73, 12: 69},
 ];
-const Music = {timer: null, next: 0, step: 0, tempo: 108};
+// boss theme: pounding low bass on a tritone, a heavy kick on every beat, slow diminished organ chords and a funeral bell
+const BOSS_ROOTS = [38, 38, 39, 37];
+const BOSS_CHORDS = [[50, 53, 56], [50, 53, 56], [51, 54, 57], [49, 52, 55]];
+const BOSS_BASS = [0, 0, null, 0, 0, null, 0, null, 0, 0, null, 6, null, 6, 5, null];
+const Music = {timer: null, next: 0, step: 0, tempo: 108, mode: 'normal'};
 function musicStart() {
   if (!AC || Music.timer) return;
   Music.next = AC.currentTime + .08; Music.step = 0;
@@ -581,7 +866,18 @@ function synthBass(f, t, dur) {
 function bell(f, t, vol) {
   [1, 2.76, 5.4].forEach((m, k) => tone(f * m, f * m, 2.4 - k * .6, 'sine', vol / (k + 1), 0, musicGain, t));
 }
+function playBossStep(s, t, e) {
+  const bar = (s >> 4) % 4, i = s % 16, mg = musicGain, root = BOSS_ROOTS[bar], b = BOSS_BASS[i];
+  if (b !== null) { synthBass(mf(root + b), t, e * 1.5); synthBass(mf(root + b - 12), t, e * 1.2); }
+  if (i % 4 === 0 || i === 14) tone(110, 34, .24, 'sine', .44, 0, mg, t);
+  if (i === 4 || i === 12) { noise(.24, .17, 'bandpass', 900, 380, 0, mg, t); tone(160, 90, .12, 'triangle', .08, 0, mg, t); }
+  if (i % 2 === 0) noise(.02, .014, 'highpass', 8000, 8000, 0, mg, t);
+  if (i === 0) BOSS_CHORDS[bar].forEach(n => organ(mf(n), t, e * 15, .02));
+  if (i === 0 && bar % 2 === 0) bell(mf(57), t, .045);
+  if (i === 8 && bar === 3) { tone(mf(74), mf(73), e * 6, 'square', .02, 0, mg, t); tone(mf(80), mf(79), e * 6, 'square', .014, 0, mg, t); }
+}
 function playStep(s, t, e) {
+  if (Music.mode === 'boss') { playBossStep(s, t, e); return; }
   const bar = s >> 4, i = s % 16, mg = musicGain, root = ROOTS[bar];
   // synth bass groove
   const b = BASS[i];
@@ -725,26 +1021,37 @@ let lastName = 'CHASSEUR';
 try { lastName = localStorage.getItem('bonbons-name') || lastName; } catch (e) {}
 function setScene(s) { scene = s; sceneT = 0; }
 function lvlCfg(n) {
+  const boss = stageOf(n).stage === 3, total = Math.min(6 + 3 * (n - 1), 48);
   return {
-    species: Math.min(n, 8), candies: Math.min(n + 1, 8),
-    total: Math.min(6 + 3 * (n - 1), 48),
+    boss, total: boss ? Math.max(4, Math.round(total * .6)) : total,
     interval: Math.max(.8, 3.4 - .28 * (n - 1)),
     speed: 16 + 2.2 * (n - 1) + Math.max(0, n - 8) * 1.5,
     maxActive: Math.min(2 + n, 11),
   };
 }
+const levelTempo = () => 108 + Math.min(G.level - 1, 10) * 2;
 function newGame() {
   G = {level: 1, score: 0, lives: 3, sel: 0, lane: 1, py: feetY(1), mons: [], candies: [], parts: [], texts: [],
-       known: {}, spawned: 0, spawnT: 1, cool: 0, throwT: 0, shake: 0, lostT: 0, bonus: 0, extraLife: false, cfg: lvlCfg(1),
+       known: {}, spawned: 0, spawnT: 1, cool: 0, throwT: 0, shake: 0, lostT: 0, bonus: 0, extraLife: false, victory: false,
        name: '', qualifies: false, run: null, taken: false};
+  prepLevel();
+  Music.mode = 'normal';
   setScene('intro');
   if (prefs.music) musicStart();
 }
+// set up the world, creatures and candies of the coming level (shown on the intro card)
+function prepLevel() {
+  const L = worldLists(G.level);
+  G.st = stageOf(G.level); G.cfg = lvlCfg(G.level);
+  G.spList = L.sp; G.cList = L.c; G.newSp = L.newSp; G.newC = L.newC;
+  G.spawned = 0; G.mons = []; G.candies = [];
+  G.boss = null; G.bossDone = false; G.bossFed = 0; G.bossPending = 1.6; G.bossIntro = 0; G.minionT = 0;
+  if (G.st.stage === 1 || G.sel >= G.cList.length) G.sel = 0;
+  setTheme(G.st.wi);
+}
 function beginLevel() {
-  G.cfg = lvlCfg(G.level);
   G.spawned = 0; G.spawnT = 1.2; G.mons = []; G.candies = [];
-  G.sel = Math.min(G.sel, G.cfg.candies - 1);
-  Music.tempo = 108 + Math.min(G.level - 1, 10) * 2;
+  Music.tempo = levelTempo(); Music.mode = 'normal';
   setScene('play');
 }
 function addText(s, x, y, col, life = 1.2, font = 'horror') { G.texts.push({s, x, y, col, life, max: life, font}); }
@@ -754,11 +1061,11 @@ function burst(n, x, y, col, o = {}) {
     g: o.g ?? 120, life: o.life ?? .8, max: o.life ?? .8, col, w: o.w ?? 2, h: o.h ?? 2, kind: o.kind || 'dot', rot: Math.random() * 6});
 }
 function pickSpecies() {
-  const n = G.cfg.species;
-  if (G.level <= 8 && n > 1 && Math.random() < .4) return SPECIES[n - 1];
-  return SPECIES[(Math.random() * n) | 0];
+  const pool = G.newSp.length && Math.random() < .4 ? G.newSp : G.spList;
+  return SPECIES[pool[(Math.random() * pool.length) | 0]];
 }
-function spawn() {
+// extra = a minion summoned during the boss fight (not counted in the level's total)
+function spawn(extra = false) {
   const active = G.mons.filter(m => m.state !== 'leave').length;
   if (active >= G.cfg.maxActive) { G.spawnT = .4; return; }
   const free = [];
@@ -766,16 +1073,27 @@ function spawn() {
   if (!free.length) { G.spawnT = .3; return; }
   const sp = pickSpecies(), lane = free[(Math.random() * free.length) | 0];
   G.mons.push({sp, lane, x: 20 - sp.w / 2, w: sp.w, h: sp.h, speed: G.cfg.speed * (.85 + Math.random() * .3),
-               mult: 1, anger: 0, state: 'walk', t: 0, dur: 1, ph: Math.random() * 6, seed: Math.random() * 6, rise: .7});
+               mult: 1, anger: 0, state: 'walk', t: 0, dur: 1, ph: Math.random() * 6, seed: Math.random() * 6, rise: .7, extra});
   burst(10, 20, feetY(lane) - 2, '#5a4048', {vy: -60, spread: 50, g: 200, life: .6});
+  sfx.spawn();
+  if (extra) return;
   G.spawned++;
   G.spawnT = G.cfg.interval * (.7 + Math.random() * .6);
-  sfx.spawn();
+}
+function spawnBoss() {
+  const b = BOSSES[WORLDS[G.st.wi].boss], lane = (Math.random() * NL) | 0;
+  const m = {sp: b, boss: true, extra: true, lane, x: 22 - b.w / 2, w: b.w, h: b.h, speed: G.cfg.speed * .55, mult: 1, anger: 0,
+             state: 'walk', t: 0, dur: 1, ph: 0, seed: Math.random() * 6, rise: 1.6, riseMax: 1.6, need: b.need + G.st.cycle * 2,
+             hopT: 4, hop: 0, fy: feetY(lane), chew: 0};
+  G.boss = m; G.mons.push(m); G.minionT = 7; G.shake = 1.4; G.bossIntro = 2.8;
+  burst(30, 22, feetY(lane) - 2, '#5a4048', {vy: -90, spread: 90, g: 200, life: 1});
+  Music.mode = 'boss'; Music.tempo = 92;
+  sfx.bossIn();
 }
 function throwCandy() {
   if (scene !== 'play' || G.cool > 0) return;
   G.cool = .22; G.throwT = .15;
-  G.candies.push({c: G.sel, lane: G.lane, x: PATH_X1 - 8, t: 0});
+  G.candies.push({c: G.cList[G.sel], lane: G.lane, x: PATH_X1 - 8, t: 0});
   burst(5, PX - 4, feetY(G.lane) - 28, C.bile, {vx: -40, vy: -30, spread: 50, g: 0, life: .35, w: 1, h: 1});
   sfx.throw();
 }
@@ -783,11 +1101,12 @@ function reaction(m, cid) {
   const sp = m.sp, cand = CANDIES[cid].id;
   return sp.likes.includes(cand) ? 'like' : sp.hates.includes(cand) ? 'hate' : 'meh';
 }
-const monTop = m => feetY(m.lane) - m.h;
+const monTop = m => (m.fy ?? feetY(m.lane)) - m.h;
 function hit(m, cid) {
   const r = reaction(m, cid), sp = m.sp;
   (G.known[sp.id] ||= {})[CANDIES[cid].id] = r;
   const cx = m.x + m.w / 2, top = monTop(m);
+  if (m.boss) { bossHit(m, r, cx, top); return; }
   if (r === 'like') {
     m.state = 'leave';
     const pts = 50 + 10 * G.level + 25 * m.anger;
@@ -818,6 +1137,54 @@ function hit(m, cid) {
     sfx.meh();
   }
 }
+// a boss shows that it liked a candy but keeps coming until it has eaten enough of them
+function bossHit(m, r, cx, top) {
+  const sp = m.sp;
+  if (r === 'like') {
+    G.bossFed++; m.chew = .6;
+    const pts = 100 + 20 * G.level; G.score += pts;
+    for (let i = 0; i < 6; i++) G.parts.push({x: cx + (Math.random() - .5) * 24, y: top + 6, vx: (Math.random() - .5) * 30, vy: -30 - Math.random() * 25, g: 0, life: 1.1, max: 1.1, col: C.hot, kind: 'heart'});
+    sfx.munch();
+    if (G.bossFed >= m.need) { bossDefeated(m, cx, top); return; }
+    addText('MIAM! ' + G.bossFed + '/' + m.need, cx, top - 14, C.toxic, 1.3);
+  } else if (r === 'hate') {
+    m.state = 'react'; m.dur = m.t = .9; G.shake = .7;
+    addText(sp.cry, cx, top - 14, sp.col, 1.4);
+    sfx.hate(sp.pitch); sfx.roar();
+    burst(18, cx, top + 24, C.blood, {spread: 130, g: 80, life: .7});
+  } else {
+    m.state = 'meh'; m.dur = m.t = .5;
+    addText('BOF...', cx, top - 14, C.dim, 1);
+    sfx.meh();
+  }
+}
+function bossDefeated(m, cx, top) {
+  m.state = 'leave'; G.bossDone = true;
+  const bonus = 500 * G.st.num; G.score += bonus;
+  addText('RASSASIÉ! +' + bonus, Math.max(cx, 120), top - 16, C.bile, 2.4);
+  for (let i = 0; i < 16; i++) G.parts.push({x: cx + (Math.random() - .5) * 40, y: top + 20, vx: (Math.random() - .5) * 60, vy: -40 - Math.random() * 40, g: 0, life: 1.6, max: 1.6, col: i % 2 ? C.hot : C.bile, kind: 'heart'});
+  G.mons.forEach(o => { if (o.state !== 'leave') { o.state = 'leave'; o.rise = 0; } });
+  Music.mode = 'normal'; Music.tempo = levelTempo();
+  sfx.bossWin();
+}
+// bosses lumber along and leap from one path to another
+function bossMove(m, dt) {
+  m.chew -= dt;
+  if (m.hop > 0) {
+    m.hop = Math.max(0, m.hop - dt);
+    const k = 1 - m.hop / .5;
+    m.fy = m.fromY + (feetY(m.lane) - m.fromY) * k - Math.sin(k * Math.PI) * 18;
+    if (!m.hop) { G.shake = .3; burst(10, m.x + m.w / 2, feetY(m.lane) - 2, '#3a2a30', {vy: -40, spread: 70, g: 200, life: .5}); sfx.thud(); }
+    return;
+  }
+  m.fy = feetY(m.lane);
+  if (m.state !== 'walk' || m.x < 70) return;
+  if ((m.hopT -= dt) <= 0) {
+    const d = m.lane === 0 ? 1 : m.lane === NL - 1 ? -1 : Math.random() < .5 ? -1 : 1;
+    m.fromY = m.fy; m.lane += d; m.hop = .5;
+    m.hopT = Math.max(1.6, 3 + Math.random() * 3 - m.anger * .5);
+  }
+}
 function loseLife(m) {
   G.lives--;
   if (G.lives <= 0) { startCaught(m); return; }
@@ -826,7 +1193,7 @@ function loseLife(m) {
   sfx.lose();
 }
 function startCaught(m) {
-  G.taken = true; G.caughtT = 0; G.hx = PX + 12; G.candies = []; G.helpSaid = false;
+  G.taken = true; G.caughtT = 0; G.hx = PX + 12; G.candies = []; G.helpSaid = false; G.bossIntro = 0;
   const others = G.mons.filter(o => o !== m && o.state !== 'leave')
     .sort((a, b) => Math.abs(a.lane - G.lane) - Math.abs(b.lane - G.lane) || b.x - a.x).slice(0, 2);
   G.carriers = [m, ...others];
@@ -837,9 +1204,21 @@ function startCaught(m) {
   addText('ATTRAPÉ!', PX, laneTop(G.lane) - 2, C.blood, 2);
 }
 function afterLost() {
-  G.spawned -= G.mons.filter(m => m.state !== 'leave').length;
+  G.spawned -= G.mons.filter(m => m.state !== 'leave' && !m.extra).length;
+  // an unfed boss comes back out of its hole, still remembering what it already ate
+  if (G.boss && !G.bossDone) { G.boss = null; G.bossPending = 1.6; G.bossIntro = 0; }
   G.mons = []; G.candies = []; G.spawnT = 1.4;
   setScene('play');
+}
+function levelComplete() {
+  const wasBoss = G.cfg.boss, lastWorld = G.st.wi === NW - 1;
+  G.bonus = 150 * G.level; G.score += G.bonus;
+  G.level++;
+  G.extraLife = wasBoss && G.lives < 5;
+  if (G.extraLife) G.lives++;
+  G.victory = wasBoss && lastWorld;
+  prepLevel();
+  setScene('intro'); sfx.level();
 }
 function submitName() {
   const name = (G.name || '').trim().toUpperCase();
@@ -851,8 +1230,8 @@ function submitName() {
   sfx.hiscore();
   goBoard();
 }
-function quitToHome() { G = null; titlePage = 0; Music.tempo = 108; setScene('title'); }
-function goBoard() { setScene('board'); if (prefs.music) musicStart(); }
+function quitToHome() { G = null; titlePage = 0; Music.tempo = 108; Music.mode = 'normal'; setTheme(0); setScene('title'); }
+function goBoard() { setScene('board'); Music.mode = 'normal'; if (prefs.music) musicStart(); }
 
 /* ---------- Update ---------- */
 function update(dt) {
@@ -886,14 +1265,19 @@ function update(dt) {
   }
   if (scene !== 'play') return;
 
-  G.cool -= dt; G.throwT -= dt;
+  G.cool -= dt; G.throwT -= dt; G.bossIntro -= dt;
   if (G.spawned < G.cfg.total) { G.spawnT -= dt; if (G.spawnT <= 0) spawn(); }
+  // while the boss is out, smaller monsters keep crawling out to help it
+  if (G.boss && !G.bossDone && G.boss.rise <= 0 && (G.minionT -= dt) <= 0) {
+    G.minionT = Math.max(3, 6.5 - G.st.cycle);
+    if (G.mons.filter(o => !o.boss && o.state !== 'leave').length < 2 + G.st.cycle) spawn(true);
+  }
 
   for (const c of G.candies) {
     c.x -= 260 * dt; c.t += dt;
     let target = null;
     for (const m of G.mons) {
-      if (m.lane !== c.lane || m.state === 'leave') continue;
+      if (m.lane !== c.lane || m.state === 'leave' || m.hop > .25) continue;
       if (c.x <= m.x + m.w - 4 && c.x >= m.x - 14 && (!target || m.x > target.x)) target = m;
     }
     if (target) { hit(target, c.c); c.dead = true; continue; }
@@ -907,15 +1291,16 @@ function update(dt) {
   G.candies = G.candies.filter(c => !c.dead);
 
   for (const m of G.mons) {
-    m.ph += dt * (6 + m.mult * 2);
+    m.ph += dt * (m.boss ? 3.5 + m.mult : 6 + m.mult * 2);
     if (m.rise > 0) { m.rise -= dt; continue; }
+    if (m.boss) bossMove(m, dt);
     if (m.state === 'walk') {
-      m.x += m.speed * m.mult * dt;
+      m.x += m.speed * m.mult * (m.chew > 0 ? .35 : 1) * dt;
       if (m.x + m.w >= PATH_X1 - 4) { loseLife(m); return; }
     } else if (m.state === 'react') {
       m.t -= dt;
       if (m.t <= 0) {
-        m.state = 'walk'; m.anger++; m.mult = Math.min(m.mult * 1.5, 3.4);
+        m.state = 'walk'; m.anger++; m.mult = m.boss ? Math.min(m.mult * 1.3, 2.2) : Math.min(m.mult * 1.5, 3.4);
         if (m.sp.id === 'ghost') { m.x += 26; burst(10, m.x + m.w / 2, feetY(m.lane) - 20, C.acid, {spread: 80, g: 0, life: .4}); }
       }
     } else if (m.state === 'meh') {
@@ -927,11 +1312,8 @@ function update(dt) {
   G.mons = G.mons.filter(m => !m.gone);
 
   if (G.spawned >= G.cfg.total && G.mons.length === 0) {
-    G.bonus = 150 * G.level; G.score += G.bonus;
-    G.level++;
-    G.extraLife = (G.level - 1) % 3 === 0 && G.lives < 5;
-    if (G.extraLife) G.lives++;
-    setScene('intro'); sfx.level();
+    if (!G.cfg.boss || G.bossDone) levelComplete();
+    else if (!G.boss) { G.shake = Math.max(G.shake, .15); if ((G.bossPending -= dt) <= 0) spawnBoss(); }
   }
 }
 
@@ -944,16 +1326,45 @@ function drawSkyLife() {
   ctx.save(); ctx.globalAlpha = .55;
   [[0, 22, 140], [1, 54, 100]].forEach(([k, y, w]) => ell(((T * (5 + k * 3) + k * 300) % (W + 200)) - 100, y, w, 4, '#0a1636', 0, false));
   ctx.restore();
-  // will-o'-wisps
-  for (let i = 0; i < 6; i++) {
-    const x = 60 + ((i * 97 + T * 6) % 480), y = 96 + (i * 53) % 220 + Math.sin(T * 1.3 + i * 2) * 5;
-    if (Math.sin(T * 1.7 + i * 1.3) > -.1) glowEye(x, y, .9, i % 2 ? C.toxic : C.acid, 8);
+  if (THEME === 0) {
+    // will-o'-wisps
+    for (let i = 0; i < 6; i++) {
+      const x = 60 + ((i * 97 + T * 6) % 480), y = 96 + (i * 53) % 220 + Math.sin(T * 1.3 + i * 2) * 5;
+      if (Math.sin(T * 1.7 + i * 1.3) > -.1) glowEye(x, y, .9, i % 2 ? C.toxic : C.acid, 8);
+    }
+  } else if (THEME === 1) {
+    // fireflies
+    for (let i = 0; i < 16; i++) {
+      const x = 50 + ((i * 83 + T * (4 + i % 3)) % 500) + Math.sin(T * 2 + i) * 6, y = 92 + (i * 47) % 230 + Math.sin(T * 1.6 + i * 3) * 6;
+      if (Math.sin(T * 2.3 + i * 1.7) > 0) glowEye(x, y, .7, C.bile, 7);
+    }
+  } else {
+    // embers drifting up, and the odd flash of lightning behind the castle
+    for (let i = 0; i < 10; i++) {
+      const y = 330 - ((T * (12 + i % 4 * 4) + i * 61) % 250), x = 60 + (i * 89) % 480 + Math.sin(T + i) * 8;
+      glowEye(x, y, .6, i % 2 ? C.orange : '#ffd060', 5);
+    }
+    const lt = T % 9;
+    if (lt < .1 || (lt > .22 && lt < .3)) { ctx.fillStyle = 'rgba(255,220,235,.22)'; ctx.fillRect(0, 0, W, 82); }
   }
   for (let i = 0; i < 6; i++) {
     const ex = 8 + (i * 13) % 34, ey = 100 + i * 41 + Math.sin(T * .5 + i) * 3;
     if (Math.sin(T * .7 + i * 2.1) > .1 && Math.floor(T * 5 + i * 3) % 17 !== 0) { glowEye(ex, ey, .8, i % 3 ? C.bile : C.blood, 5); glowEye(ex + 4, ey, .8, i % 3 ? C.bile : C.blood, 5); }
   }
-  CANDLES.forEach(c => {
+  if (THEME === 1) LIGHTS[1].forEach(c => {
+    const a = .18 + Math.sin(T * 2 + c.ph) * .1;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = a / .25;
+    ctx.fillStyle = rg(c.x, c.y, 0, 16, [c.col === C.toxic ? 'rgba(125,255,58,.25)' : c.col === C.acid ? 'rgba(46,242,255,.25)' : 'rgba(255,47,179,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 16, c.y - 16, 32, 32);
+    ctx.restore();
+  });
+  if (THEME === 2) LIGHTS[2].forEach(c => {
+    const f = Math.sin(T * 13 + c.ph) * .5;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rg(c.x, c.y - 2, 0, 12, ['rgba(255,170,60,.3)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, c.y - 14, 24, 24);
+    ctx.restore();
+    glowEye(c.x + f * .3, c.y - .6, 1, '#ffc040', 6);
+  });
+  if (THEME === 0) CANDLES.forEach(c => {
     const f = Math.sin(T * 13 + c.ph) * .5;
     ctx.fillStyle = 'rgba(0,0,0,0)';
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -962,7 +1373,7 @@ function drawSkyLife() {
     rrect(c.x - 1.4, c.y - 6, 2.8, 6, .6); sh('#d8d2c0', .6);
     glowEye(c.x + f * .4, c.y - 7.6, 1.1, c.col, 6);
   });
-  CROWS.forEach(c => {
+  if (THEME === 0) CROWS.forEach(c => {
     ctx.save(); ctx.translate(c.x, c.y);
     poly([-4, 0, -1, -4, 3, -4.5, 5.5, -3, 3, -2, 4, 0, 1, 1, -6, 2], '#03040a', false);
     poly([5.5, -3.2, 7.5, -2.6, 5.2, -2.2], '#3a3a40', false);
@@ -973,7 +1384,7 @@ function drawSkyLife() {
 function drawGraveGlow(i) {
   const gy = feetY(i), a = .18 + Math.sin(T * 2.2 + i) * .08;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = rg(20, gy - 6, 0, 22, ['rgba(125,255,58,' + a + ')', 'rgba(0,0,0,0)']); ctx.fillRect(-2, gy - 30, 44, 34);
+  ctx.fillStyle = rg(20, gy - 6, 0, 22, [['rgba(125,255,58,', 'rgba(190,100,255,', 'rgba(255,70,40,'][THEME] + a + ')', 'rgba(0,0,0,0)']); ctx.fillRect(-2, gy - 30, 44, 34);
   ctx.restore();
 }
 function drawFog(i) {
@@ -1010,20 +1421,22 @@ function drawMonster(m) {
       case 'skeleton': if (k < .7 || Math.floor(m.t * 20) % 2) { ctx.restore(); return; } break;
       case 'troll': x += (Math.random() - .5) * 4; break;
       case 'goblin': dy -= Math.abs(Math.sin(k * Math.PI * 5)) * 7; if (Math.floor(k * 10) % 2) face = -1; break;
+      default: x += (Math.random() - .5) * 5; dy -= Math.abs(Math.sin(k * Math.PI * 3)) * 4;
     }
   }
   ell(x, fy, m.w * .42, 2.4, 'rgba(0,0,6,.55)', 0, false);
   ctx.fillStyle = rg(x, fy - m.h * .5, 2, m.h * .75, ['rgba(0,0,8,.35)', 'rgba(0,0,8,0)']); ctx.fillRect(x - m.h, fy - m.h * 1.3, m.h * 2, m.h * 1.4);
   ctx.save();
   if (m.rise > 0) {
-    ctx.beginPath(); ctx.rect(x - 30, fy - 80, 60, 79); ctx.clip();
-    dy += (m.rise / .7) * m.h;
+    const big = m.boss ? 2 : 1;
+    ctx.beginPath(); ctx.rect(x - 30 * big, fy - 80 * big, 60 * big, 80 * big - 1); ctx.clip();
+    dy += (m.rise / (m.riseMax || .7)) * m.h;
   }
   ctx.translate(x, fy + dy); ctx.scale(face * sc, sc);
   sp.draw(p, opts);
   const hd = HEAD[sp.id]; if (hd && !opts.red) rim(hd[0], hd[1], hd[2]);
   ctx.restore();
-  if (m.rise > 0) { burst(1, x + (Math.random() - .5) * 20, fy - 2, '#3a2a30', {vy: -40, spread: 30, g: 200, life: .4}); }
+  if (m.rise > 0) { burst(m.boss ? 3 : 1, x + (Math.random() - .5) * (m.boss ? 44 : 20), fy - 2, '#3a2a30', {vy: -40, spread: 30, g: 200, life: .4}); }
   if (m.anger > 0 && m.state !== 'leave' && !carry) {
     const ax = x + 6, ay = fy - m.h - 6 + dy + Math.sin(T * 10) * .8;
     for (let a = 0; a < Math.min(m.anger, 3); a++) {
@@ -1048,7 +1461,7 @@ function drawHunter(p, throwing, struggle) {
   poly([-3, -21, -8.5, -8, -5.5 - Math.sin(T * 3) * .8, -3.5, 0, -6], '#3e2412');
   // satchel of candies at the back hip
   rrect(-9.6, -11.6, 6.2, 5.2, 1.2); sh('#6a4020', .7); line(-9.6, -10, -3.4, -10, '#3a2010', .6);
-  if (G) drawCandy(G.sel, -6.6, -13, .38, -.4);
+  if (G && G.cList) drawCandy(G.cList[G.sel], -6.6, -13, .38, -.4);
   // long hunter coat
   poly([-6.5, -5, 6.5, -5, 5.5, -21, -5.5, -21], lg(-6, 0, 6, 0, ['#4e2c16', '#8a5430']));
   line(1, -21, 1, -6, '#2a160a', .7);
@@ -1169,7 +1582,7 @@ function drawBar(withCandies) {
   ctx.fillStyle = lg(0, 330, 0, 360, ['rgba(3,5,12,.85)', 'rgba(3,5,12,.98)']); ctx.fillRect(0, 330, W, 30);
   line(0, 331, W, 331, 'rgba(125,255,58,.5)', .8);
   if (withCandies) {
-    const n = G.cfg.candies;
+    const n = G.cList.length;
     for (let i = 0; i < n; i++) {
       const x = 8 + i * 30, y = 336, on = i === G.sel;
       ctx.save();
@@ -1177,10 +1590,11 @@ function drawBar(withCandies) {
       rrect(x, y, 26, 21, 4); ctx.fillStyle = on ? 'rgba(125,255,58,.16)' : 'rgba(20,30,70,.6)'; ctx.fill();
       ctx.strokeStyle = on ? C.toxic : C.mute; ctx.lineWidth = on ? 1.4 : .8; ctx.stroke();
       ctx.restore();
-      drawCandy(i, x + 13, y + 10.5, .95);
+      drawCandy(G.cList[i], x + 13, y + 10.5, .95);
       txt(String(i + 1), x + 3, y + 1, on ? C.bile : C.mute, 'left', 7, 'ui', null);
     }
-    txt(CANDIES[G.sel].name, 8 + n * 30 + 8, 340, CANDIES[G.sel].col, 'left', 13);
+    const cs = CANDIES[G.cList[G.sel]];
+    txt(cs.name, 8 + n * 30 + 8, 340, cs.col, 'left', n > 7 ? 11 : 13);
     toggleBtn(BTN.book, true, 'book', '');
   }
   toggleBtn(BTN.music, prefs.music, 'music', 'M');
@@ -1189,9 +1603,10 @@ function drawBar(withCandies) {
 function drawHUD() {
   ctx.fillStyle = lg(0, 0, 0, 20, ['rgba(3,5,12,.95)', 'rgba(3,5,12,.6)']); ctx.fillRect(0, 0, W, 18);
   txt('SCORE', 8, 3, C.dim, 'left', 11); txt(pad(G.score, 6), 42, 2, C.bile, 'left', 13);
-  const left = G.cfg.total - G.spawned + G.mons.filter(m => m.state !== 'leave').length;
-  txt('MONSTRES', 120, 3, C.dim, 'left', 11); txt(String(left), 168, 2, C.acid, 'left', 13);
-  txt('Niveau ' + G.level, W / 2 + 10, 0, C.toxic, 'center', 16, 'horror');
+  const left = G.cfg.total - G.spawned + G.mons.filter(m => m.state !== 'leave' && !m.extra).length;
+  txt('MONSTRES', 120, 3, C.dim, 'left', 11);
+  if (G.cfg.boss && G.spawned >= G.cfg.total && !left) txt('BOSS', 168, 2, C.blood, 'left', 13); else txt(String(left), 168, 2, C.acid, 'left', 13);
+  txt('Monde ' + fmtLevel(G.level), W / 2 + 10, 0, C.toxic, 'center', 16, 'horror');
   txt('RECORD ' + pad(Math.max(topScore(), G.score), 6), 532, 3, C.dim, 'right', 11);
   for (let i = 0; i < 5; i++) if (i < Math.max(3, G.lives)) lantern(556 + i * 17, 8, i < G.lives);
   drawBar(true);
@@ -1202,7 +1617,7 @@ function drawBoard(x, y, w, highlight, limit = 10, rowH = 15) {
   y += 16;
   txt('#', x + 8, y, C.blood, 'left', 11, 'ui', null);
   txt('NOM', x + 34, y, C.blood, 'left', 11, 'ui', null);
-  txt('NIV.', x + w - 90, y, C.blood, 'right', 11, 'ui', null);
+  txt('MONDE', x + w - 90, y, C.blood, 'right', 11, 'ui', null);
   txt('SCORE', x + w - 8, y, C.blood, 'right', 11, 'ui', null);
   line(x + 6, y + 14, x + w - 6, y + 14, 'rgba(255,34,64,.4)', .7);
   y += 19;
@@ -1213,9 +1628,28 @@ function drawBoard(x, y, w, highlight, limit = 10, rowH = 15) {
     const col = i === 0 ? C.bile : i < 3 ? C.toxic : C.bone;
     txt(String(i + 1), x + 8, y + i * rowH, col, 'left', 12, 'ui', null);
     txt(r.name, x + 34, y + i * rowH, col, 'left', 12, 'ui', null);
-    txt(String(r.level), x + w - 90, y + i * rowH, col, 'right', 12, 'ui', null);
+    txt(fmtLevel(r.level), x + w - 90, y + i * rowH, col, 'right', 12, 'ui', null);
     txt(pad(r.score, 6), x + w - 8, y + i * rowH, col, 'right', 12, 'ui', null);
   });
+}
+function drawBossUI() {
+  if (!G || !G.boss || G.bossDone || scene === 'caught') return;
+  const b = G.boss, n = b.need, w = 132 + n * 14, x0 = W / 2 - w / 2;
+  rrect(x0, 21, w, 21, 5); ctx.fillStyle = 'rgba(3,5,12,.88)'; ctx.fill(); ctx.strokeStyle = C.blood; ctx.lineWidth = 1; ctx.stroke();
+  txt(b.sp.name, x0 + 8, 23, b.sp.col, 'left', 15, 'horror');
+  for (let i = 0; i < n; i++) {
+    const hx = x0 + w - 12 - (n - 1 - i) * 14;
+    if (i < G.bossFed) heart(hx, 26, C.hot, 10);
+    else { heartPath(hx, 26, 10); ctx.strokeStyle = C.mute; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  if (G.bossIntro > 0 && scene === 'play') {
+    ctx.save(); ctx.globalAlpha = Math.min(1, G.bossIntro / .5);
+    ctx.fillStyle = 'rgba(40,0,10,.35)'; ctx.fillRect(0, 44, W, 286);
+    titleText(b.sp.name, W / 2, 120, 42);
+    txt('sort de sa cachette!', W / 2, 166, C.blood, 'center', 22, 'horror');
+    txt('Il lui faut ' + n + ' bonbons qu\'il aime pour s\'en retourner.', W / 2, 198, C.bone, 'center', 14);
+    ctx.restore();
+  }
 }
 const TITLE_CANDIES = Array.from({length: 16}, (_, i) => ({c: i % 8, x: 20 + ((i * 151) % 600), sp: 9 + (i * 7) % 11, ph: i * 1.7, s: .9 + (i % 3) * .35}));
 const DRIPS = [[1, 6], [3, 9], [6, 5], [8, 8], [10, 6], [12, 10]];
@@ -1303,59 +1737,66 @@ function drawTitle() {
 function drawIntro() {
   drawHUD();
   panel(120, 46, 400, 276);
-  titleText('Niveau ' + G.level, W / 2, 58, 30);
-  let y = 96;
+  const st = G.st, wd = WORLDS[st.wi];
+  titleText('Monde ' + fmtLevel(G.level), W / 2, 54, 30);
+  txt(wd.name, W / 2, 86, C.acid, 'center', 16, 'horror');
+  let y = 108;
   if (G.level > 1) {
-    txt('Bonus de niveau +' + G.bonus + (G.extraLife ? '   ·   +1 lanterne!' : ''), W / 2, y, C.toxic, 'center', 12, 'ui', null);
-    y += 18;
+    const extra = G.victory ? '   ·   Les 3 mondes sont vaincus!' : G.extraLife ? '   ·   +1 lanterne!' : '';
+    txt('Bonus de niveau +' + G.bonus + extra, W / 2, y, C.toxic, 'center', 12, 'ui', null);
+    y += 16;
   }
-  const newSp = G.level <= 8 ? [SPECIES[G.level - 1]] : [];
-  const newC = G.level === 1 ? [0, 1] : (G.level <= 7 ? [G.level] : []);
+  const newSp = G.newSp.map(i => SPECIES[i]), newC = G.newC;
   if (newSp.length || newC.length) {
     const colX = [W / 2 - 92, W / 2 + 92];
     if (newSp.length) {
-      const sp = newSp[0];
-      txt('NOUVELLE CRÉATURE', colX[0], y, C.blood, 'center', 12, 'ui', null);
-      ctx.save(); ctx.translate(colX[0], y + 84); ctx.scale(1.55, 1.55); sp.draw(T * 6, {seed: 1}); ctx.restore();
-      txt(sp.name, colX[0], y + 88, sp.col, 'center', 18, 'horror');
+      const two = newSp.length > 1, sc = two ? 1.3 : 1.55;
+      txt(two ? 'NOUVELLES CRÉATURES' : 'NOUVELLE CRÉATURE', colX[0], y, C.blood, 'center', 12, 'ui', null);
+      newSp.forEach((sp, i) => {
+        const cx = colX[0] + (two ? (i ? 32 : -32) : 0);
+        ctx.save(); ctx.translate(cx, y + 80); ctx.scale(sc, sc); sp.draw(T * 6, {seed: 1 + i}); ctx.restore();
+        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 15 : 18, 'horror');
+      });
     }
     if (newC.length) {
       txt(newC.length > 1 ? 'BONBONS' : 'NOUVEAU BONBON', colX[1], y, C.blood, 'center', 12, 'ui', null);
       newC.forEach((c, i) => drawCandy(c, colX[1] + (newC.length > 1 ? (i ? 26 : -26) : 0), y + 44, 2.6, Math.sin(T * 2 + i) * .2));
       wrap(newC.map(c => CANDIES[c].name).join(' / '), 26).forEach((l, i) => txt(l, colX[1], y + 78 + i * 14, C.bone, 'center', 13));
     }
-    y += 118;
+    y += 112;
   } else {
-    txt('Tout le cimetière est réveillé.', W / 2, y + 22, C.bone, 'center', 14);
-    txt('Plus nombreux. Plus rapides.', W / 2, y + 44, C.blood, 'center', 20, 'horror');
+    txt(st.cycle ? 'Le cauchemar recommence…' : 'Toutes les créatures sont réunies.', W / 2, y + 18, C.bone, 'center', 14);
+    txt('Plus nombreux. Plus rapides.', W / 2, y + 40, C.blood, 'center', 20, 'horror');
     y += 84;
   }
-  const hint = G.level === 1
-    ? 'Lance des bonbons et observe : que préfère le zombie?'
-    : G.level <= 8 ? 'Que préfère cette créature? Teste, puis vérifie ton grimoire (Échap).'
-    : G.cfg.total + ' monstres affamés sortent de leurs tombes.';
-  wrap(hint, 60).forEach((l, i) => txt(l, W / 2, y + i * 14, C.dim, 'center', 12, 'ui', null, 500));
+  const hint = G.cfg.boss ? 'Attention! Au bout de ce niveau, un BOSS sort de sa cachette. Il lui faudra plusieurs bonbons…'
+    : G.level === 1 ? 'Lance des bonbons et observe : que préfèrent ces créatures?'
+    : newSp.length ? 'Que préfère cette créature? Teste, puis vérifie ton grimoire (Échap).'
+    : G.cfg.total + ' monstres affamés sortent de leurs cachettes.';
+  wrap(hint, 60).forEach((l, i) => txt(l, W / 2, y + i * 14, G.cfg.boss ? C.blood : C.dim, 'center', 12, 'ui', null, G.cfg.boss ? 700 : 500));
   if (blink()) txt('ESPACE ou clic pour commencer', W / 2, 294, C.toxic, 'center', 17, 'horror');
 }
 function drawGrimoire() {
   ctx.fillStyle = 'rgba(2,3,10,.65)'; ctx.fillRect(0, 0, W, 330);
   panel(36, 20, 568, 306);
   titleText('Grimoire des gourmandises', W / 2, 30, 20);
-  const nc = G.cfg.candies, ns = G.cfg.species, cx0 = 210, step = Math.min(46, 372 / nc), rowH = Math.min(28, 196 / ns);
+  const rows = G.spList.map(i => SPECIES[i]), bsp = BOSSES[WORLDS[G.st.wi].boss];
+  if (G.boss || G.known[bsp.id]) rows.push(bsp);
+  const nc = G.cList.length, ns = rows.length, cx0 = 210, step = Math.min(46, 372 / nc), rowH = Math.min(28, 196 / ns);
   for (let j = 0; j < nc; j++) {
     const x = cx0 + j * step + 10;
-    drawCandy(j, x, 64, 1.2);
+    drawCandy(G.cList[j], x, 64, 1.2);
     txt(String(j + 1), x, 74, C.dim, 'center', 9, 'ui', null);
   }
   for (let i = 0; i < ns; i++) {
-    const sp = SPECIES[i], y = 92 + i * rowH;
+    const sp = rows[i], y = 92 + i * rowH;
     if (i % 2 === 0) { ctx.fillStyle = 'rgba(46,80,180,.12)'; ctx.fillRect(46, y - 2, 548, rowH); }
     ctx.save(); ctx.beginPath(); ctx.rect(46, y - 2, 40, rowH); ctx.clip();
     const s = (rowH - 2) / sp.h * 1.25;
     ctx.translate(64, y - 2 + rowH + 5 * s); ctx.scale(s, s); sp.draw(0, {seed: i}); ctx.restore();
     txt(sp.name, 92, y + rowH / 2 - 8, sp.col, 'left', 13);
     for (let j = 0; j < nc; j++) {
-      const r = G.known[sp.id] && G.known[sp.id][CANDIES[j].id];
+      const r = G.known[sp.id] && G.known[sp.id][CANDIES[G.cList[j]].id];
       const x = cx0 + j * step + 10, yy = y + rowH / 2 - 2;
       if (r === 'like') heart(x, yy - 4, C.hot, 9);
       else if (r === 'hate') cross(x - 4, yy - 4, C.blood, 8);
@@ -1376,7 +1817,7 @@ function drawOver() {
   panel(140, 62, 360, 236);
   ctx.font = '34px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.save(); ctx.shadowColor = C.blood; ctx.shadowBlur = 14 * K; ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112); ctx.restore();
-  txt('Score  ' + pad(G.score, 6) + '      Niveau ' + G.level, W / 2, 154, C.bone, 'center', 14);
+  txt('Score  ' + pad(G.score, 6) + '      Monde ' + fmtLevel(G.level), W / 2, 154, C.bone, 'center', 14);
   if (G.qualifies) {
     txt('NOUVEAU RECORD! Écris ton nom :', W / 2, 178, C.toxic, 'center', 13);
     rrect(W / 2 - 80, 198, 160, 26, 4); ctx.fillStyle = 'rgba(3,5,12,.9)'; ctx.fill(); ctx.strokeStyle = C.toxic; ctx.lineWidth = 1.2; ctx.stroke();
@@ -1404,6 +1845,7 @@ function render() {
   else if (scene === 'intro') drawIntro();
   else {
     drawHUD();
+    drawBossUI();
     if (scene === 'pause') drawGrimoire();
     if (scene === 'over') drawOver();
     if (scene === 'board') drawBoardScene();
@@ -1428,11 +1870,11 @@ function proceed() {
   else if (scene === 'intro') beginLevel();
   else if (scene === 'pause') setScene('play');
   else if (scene === 'over') { if (G.qualifies) submitName(); else goBoard(); }
-  else if (scene === 'board') { G = null; setScene('title'); titlePage = 1; }
+  else if (scene === 'board') { G = null; setTheme(0); setScene('title'); titlePage = 1; }
 }
 function moveLane(d) { G.lane = Math.max(0, Math.min(NL - 1, G.lane + d)); }
 function selectCandy(i) {
-  if (!G || i < 0 || i >= G.cfg.candies || i === G.sel) return;
+  if (!G || i < 0 || i >= G.cList.length || i === G.sel) return;
   G.sel = i; sfx.select();
 }
 window.addEventListener('keydown', e => {
@@ -1452,8 +1894,8 @@ window.addEventListener('keydown', e => {
     else if (k === 'ArrowDown' || k === 's' || k === 'S') moveLane(1);
     else if (k === ' ' || k === 'ArrowLeft') throwCandy();
     else if (/^[1-8]$/.test(k)) selectCandy(+k - 1);
-    else if (k === 'q' || k === 'Q' || k === 'a' || k === 'A') selectCandy((G.sel - 1 + G.cfg.candies) % G.cfg.candies);
-    else if (k === 'e' || k === 'E' || k === 'Tab') selectCandy((G.sel + 1) % G.cfg.candies);
+    else if (k === 'q' || k === 'Q' || k === 'a' || k === 'A') selectCandy((G.sel - 1 + G.cList.length) % G.cList.length);
+    else if (k === 'e' || k === 'E' || k === 'Tab') selectCandy((G.sel + 1) % G.cList.length);
     else if (k === 'Escape' || k === 'p' || k === 'P') setScene('pause');
   } else if (scene === 'pause') {
     if (k === 'Escape' || k === 'p' || k === 'P' || k === 'Enter' || k === ' ') setScene('play');
@@ -1476,7 +1918,7 @@ cv.addEventListener('pointerdown', e => {
     if (scene === 'play') {
       if (x >= BTN.book && x < BTN.book + 30) { setScene('pause'); return; }
       const i = Math.floor((x - 8) / 30);
-      if (x >= 8 && i < G.cfg.candies) selectCandy(i);
+      if (x >= 8 && i < G.cList.length) selectCandy(i);
     }
     return;
   }
@@ -1501,7 +1943,7 @@ cv.addEventListener('pointerleave', () => { MX = MY = -1; });
 cv.addEventListener('wheel', e => {
   if (scene !== 'play') return;
   e.preventDefault();
-  const n = G.cfg.candies;
+  const n = G.cList.length;
   selectCandy((G.sel + (e.deltaY > 0 ? 1 : -1) + n) % n);
 }, {passive: false});
 window.addEventListener('blur', () => { if (scene === 'play') setScene('pause'); });

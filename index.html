@@ -1231,6 +1231,14 @@ function submitName() {
   goBoard();
 }
 function quitToHome() { G = null; titlePage = 0; Music.tempo = 108; Music.mode = 'normal'; setTheme(0); setScene('title'); }
+let codeBuf = '', cheatOn = false;
+// testing shortcut: start straight at level n with 5 lanterns; such runs never enter the records
+function startAt(n) {
+  cheatOn = false; codeBuf = '';
+  newGame();
+  G.cheat = true; G.lives = 5; G.level = n;
+  prepLevel();
+}
 function goBoard() { setScene('board'); Music.mode = 'normal'; if (prefs.music) musicStart(); }
 
 /* ---------- Update ---------- */
@@ -1260,7 +1268,7 @@ function update(dt) {
       if (!G.helpSaid) { G.helpSaid = true; addText('AU SECOURS!', G.hx - 20, fy - 80, C.bone, 1.6); }
       if (Math.random() < dt * 14) burst(1, G.hx - 10, fy - 1, '#2a2a3a', {vy: -20, spread: 30, g: 80, life: .5});
     }
-    if (G.hx < -80) { G.qualifies = qualifies(G.score); setScene('over'); }
+    if (G.hx < -80) { G.qualifies = !G.cheat && qualifies(G.score); setScene('over'); }
     return;
   }
   if (scene !== 'play') return;
@@ -1709,12 +1717,23 @@ function drawTitle() {
   txt('et lesquels elles détestent pour vous en débarrasser.', W / 2, 92, C.bone, 'center', 12, 'ui', OUT, 500);
   // info panel with tabs
   panel(178, 108, 284, 182);
-  ['COMMENT JOUER', 'RECORDS'].forEach((t, i) => {
+  if (!cheatOn) ['COMMENT JOUER', 'RECORDS'].forEach((t, i) => {
     const tx = i ? W / 2 + 62 : W / 2 - 62, on = titlePage === i;
     txt(t, tx, 120, on ? C.bile : C.mute, 'center', 12, 'ui', null);
     if (on) line(tx - textW(t, 12) / 2, 135, tx + textW(t, 12) / 2, 135, C.blood, 1.4);
   });
-  if (titlePage === 0) {
+  if (cheatOn) {
+    rrect(184, 114, 272, 170, 7); ctx.fillStyle = 'rgba(5,9,24,.97)'; ctx.fill();
+    txt('RACCOURCI SECRET', W / 2, 120, C.hot, 'center', 18, 'horror');
+    txt('Tape un chiffre pour commencer à ce niveau :', W / 2, 144, C.bone, 'center', 12, 'ui', null, 500);
+    WORLDS.forEach((wd, i) => {
+      const y = 166 + i * 26, b = BOSSES[wd.boss];
+      txt((i * 3 + 1) + '  ' + (i * 3 + 2) + '  ' + (i * 3 + 3), 196, y, C.bile, 'left', 15);
+      txt(wd.name, 252, y + 1, C.acid, 'left', 12, 'ui', null);
+      txt('boss : ' + b.name, 446, y + 1, b.col, 'right', 12, 'ui', null, 500);
+    });
+    txt('Pas de record en mode raccourci  ·  Échap pour annuler', W / 2, 256, C.dim, 'center', 10, 'ui', null, 500);
+  } else if (titlePage === 0) {
     const lines = [
       ['↑ ↓  ou  W S / Z S', 'changer de sentier'],
       ['ESPACE  ou  clic', 'lancer un bonbon'],
@@ -1729,7 +1748,7 @@ function drawTitle() {
     wrap('Un monstre qui aime son bonbon le dévore et retourne dans sa tombe. S\'il le déteste, il enrage et accélère.', 48)
       .forEach((l, i) => txt(l, W / 2, 230 + i * 13, C.dim, 'center', 11, 'ui', null, 500));
   } else drawBoard(188, 140, 264, null, 7, 14);
-  txt('H : changer de page', W / 2, 274, C.mute, 'center', 10, 'ui', null);
+  if (!cheatOn) txt('H : changer de page', W / 2, 274, C.mute, 'center', 10, 'ui', null);
   if (blink()) txt('ENTRÉE ou clic pour jouer', W / 2, 300, C.blood, 'center', 20, 'horror');
   drawBar(false);
   txt('Concepteurs : Léo Laganière et Noémi Laganière', W / 2, 341, C.dim, 'center', 11, 'ui', null, 500);
@@ -1741,7 +1760,7 @@ function drawIntro() {
   titleText('Monde ' + fmtLevel(G.level), W / 2, 54, 30);
   txt(wd.name, W / 2, 86, C.acid, 'center', 16, 'horror');
   let y = 108;
-  if (G.level > 1) {
+  if (G.bonus) {
     const extra = G.victory ? '   ·   Les 3 mondes sont vaincus!' : G.extraLife ? '   ·   +1 lanterne!' : '';
     txt('Bonus de niveau +' + G.bonus + extra, W / 2, y, C.toxic, 'center', 12, 'ui', null);
     y += 16;
@@ -1889,6 +1908,15 @@ window.addEventListener('keydown', e => {
   }
   if (k === 'm' || k === 'M') { toggleMusic(); return; }
   if (k === 'n' || k === 'N') { toggleSfx(); return; }
+  // secret shortcut: type SUCRE on the home screen, then a digit to start at that level
+  if (scene === 'title') {
+    if (/^[a-z]$/i.test(k)) {
+      codeBuf = (codeBuf + k.toUpperCase()).slice(-5);
+      if (codeBuf === 'SUCRE' && !cheatOn) { cheatOn = true; sfx.level(); return; }
+    }
+    if (cheatOn && /^[1-9]$/.test(k)) { startAt(+k); return; }
+    if (cheatOn && k === 'Escape') { cheatOn = false; codeBuf = ''; return; }
+  }
   if (scene === 'play') {
     if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'z' || k === 'Z') moveLane(-1);
     else if (k === 'ArrowDown' || k === 's' || k === 'S') moveLane(1);

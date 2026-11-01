@@ -1,6 +1,6 @@
 # Rage de sucre
 
-Un jeu d'arcade inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers le petit chasseur de monstres. Lance-leur des bonbons avec ton lance-pierres : chaque créature a ses favoris… et ceux qu'elle déteste.
+Un jeu d'arcade inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, le jeune chasseur de monstres. Aide-le à leur lancer des bonbons avec son lance-pierres : chaque créature a ses favoris… et ceux qu'elle déteste.
 
 - Un monstre qui **aime** son bonbon le dévore et retourne dans sa tombe.
 - S'il le **déteste**, il enrage et accélère.

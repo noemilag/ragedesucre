@@ -812,6 +812,8 @@ const sfx = {
   level: () => { [67, 72, 76, 79, 84].forEach((m, i) => tone(mf(m), mf(m), .12, 'square', .055, i * .09)); [72, 76, 79].forEach(m => tone(mf(m), mf(m), .5, 'triangle', .05, .5)); },
   hiscore: () => [76, 79, 84, 88, 91, 96].forEach((m, i) => tone(mf(m), mf(m), .09, 'square', .045, i * .07)),
   roar: () => { tone(90, 38, .9, 'sawtooth', .14); noise(.8, .16, 'lowpass', 700, 90); },
+  bossThrow: () => { noise(.2, .2, 'bandpass', 400, 1800); tone(300, 600, .15, 'sawtooth', .05); },
+  bonk: () => { tone(900, 300, .12, 'square', .08); tone(1400, 1200, .5, 'sine', .06, .1); tone(1900, 1700, .5, 'sine', .04, .2); noise(.08, .2, 'lowpass', 2000, 400); },
   thud: () => { tone(90, 38, .3, 'sine', .32); noise(.25, .14, 'lowpass', 300, 70); },
   bossIn: () => {
     tone(55, 38, 2.6, 'sine', .4); tone(110, 52, 2.2, 'sawtooth', .1); noise(1.8, .22, 'lowpass', 500, 50);
@@ -1044,7 +1046,7 @@ function prepLevel() {
   const L = worldLists(G.level);
   G.st = stageOf(G.level); G.cfg = lvlCfg(G.level);
   G.spList = L.sp; G.cList = L.c; G.newSp = L.newSp; G.newC = L.newC;
-  G.spawned = 0; G.mons = []; G.candies = [];
+  G.spawned = 0; G.mons = []; G.candies = []; G.shots = []; G.stun = 0;
   G.boss = null; G.bossDone = false; G.bossFed = 0; G.bossPending = 1.6; G.bossIntro = 0; G.minionT = 0;
   if (G.st.stage === 1 || G.sel >= G.cList.length) G.sel = 0;
   setTheme(G.st.wi);
@@ -1091,7 +1093,7 @@ function spawnBoss() {
   sfx.bossIn();
 }
 function throwCandy() {
-  if (scene !== 'play' || G.cool > 0) return;
+  if (scene !== 'play' || G.cool > 0 || G.stun > 0) return;
   G.cool = .22; G.throwT = .15;
   G.candies.push({c: G.cList[G.sel], lane: G.lane, x: PATH_X1 - 8, t: 0});
   burst(5, PX - 4, feetY(G.lane) - 28, C.bile, {vx: -40, vy: -30, spread: 50, g: 0, life: .35, w: 1, h: 1});
@@ -1106,7 +1108,7 @@ function hit(m, cid) {
   const r = reaction(m, cid), sp = m.sp;
   (G.known[sp.id] ||= {})[CANDIES[cid].id] = r;
   const cx = m.x + m.w / 2, top = monTop(m);
-  if (m.boss) { bossHit(m, r, cx, top); return; }
+  if (m.boss) { bossHit(m, r, cx, top, cid); return; }
   if (r === 'like') {
     m.state = 'leave';
     const pts = 50 + 10 * G.level + 25 * m.anger;
@@ -1138,7 +1140,7 @@ function hit(m, cid) {
   }
 }
 // a boss shows that it liked a candy but keeps coming until it has eaten enough of them
-function bossHit(m, r, cx, top) {
+function bossHit(m, r, cx, top, cid) {
   const sp = m.sp;
   if (r === 'like') {
     G.bossFed++; m.chew = .6;
@@ -1148,7 +1150,7 @@ function bossHit(m, r, cx, top) {
     if (G.bossFed >= m.need) { bossDefeated(m, cx, top); return; }
     addText('MIAM! ' + G.bossFed + '/' + m.need, cx, top - 14, C.toxic, 1.3);
   } else if (r === 'hate') {
-    m.state = 'react'; m.dur = m.t = .9; G.shake = .7;
+    m.state = 'react'; m.dur = m.t = .9; G.shake = .7; m.throwBack = {c: cid, t: .6};
     addText(sp.cry, cx, top - 14, sp.col, 1.4);
     sfx.hate(sp.pitch); sfx.roar();
     burst(18, cx, top + 24, C.blood, {spread: 130, g: 80, life: .7});
@@ -1159,7 +1161,7 @@ function bossHit(m, r, cx, top) {
   }
 }
 function bossDefeated(m, cx, top) {
-  m.state = 'leave'; G.bossDone = true;
+  m.state = 'leave'; G.bossDone = true; G.shots = []; m.throwBack = null;
   const bonus = 500 * G.st.num; G.score += bonus;
   addText('RASSASIÉ! +' + bonus, Math.max(cx, 120), top - 16, C.bile, 2.4);
   for (let i = 0; i < 16; i++) G.parts.push({x: cx + (Math.random() - .5) * 40, y: top + 20, vx: (Math.random() - .5) * 60, vy: -40 - Math.random() * 40, g: 0, life: 1.6, max: 1.6, col: i % 2 ? C.hot : C.bile, kind: 'heart'});
@@ -1170,6 +1172,12 @@ function bossDefeated(m, cx, top) {
 // bosses lumber along and leap from one path to another
 function bossMove(m, dt) {
   m.chew -= dt;
+  if (m.throwBack && (m.throwBack.t -= dt) <= 0) {
+    G.shots.push({c: m.throwBack.c, lane: m.lane, x: m.x + m.w, t: 0, speed: 215 + G.st.cycle * 25});
+    m.throwBack = null;
+    addText('TIENS!', m.x + m.w, monTop(m) - 4, m.sp.col, .9);
+    sfx.bossThrow();
+  }
   if (m.hop > 0) {
     m.hop = Math.max(0, m.hop - dt);
     const k = 1 - m.hop / .5;
@@ -1193,7 +1201,7 @@ function loseLife(m) {
   sfx.lose();
 }
 function startCaught(m) {
-  G.taken = true; G.caughtT = 0; G.hx = PX + 12; G.candies = []; G.helpSaid = false; G.bossIntro = 0;
+  G.taken = true; G.caughtT = 0; G.hx = PX + 12; G.candies = []; G.shots = []; G.stun = 0; G.helpSaid = false; G.bossIntro = 0;
   const others = G.mons.filter(o => o !== m && o.state !== 'leave')
     .sort((a, b) => Math.abs(a.lane - G.lane) - Math.abs(b.lane - G.lane) || b.x - a.x).slice(0, 2);
   G.carriers = [m, ...others];
@@ -1207,7 +1215,7 @@ function afterLost() {
   G.spawned -= G.mons.filter(m => m.state !== 'leave' && !m.extra).length;
   // an unfed boss comes back out of its hole, still remembering what it already ate
   if (G.boss && !G.bossDone) { G.boss = null; G.bossPending = 1.6; G.bossIntro = 0; }
-  G.mons = []; G.candies = []; G.spawnT = 1.4;
+  G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.spawnT = 1.4;
   setScene('play');
 }
 function levelComplete() {
@@ -1297,6 +1305,20 @@ function update(dt) {
     }
   }
   G.candies = G.candies.filter(c => !c.dead);
+  G.stun = Math.max(0, G.stun - dt);
+  for (const s of G.shots) {
+    s.x += s.speed * dt; s.t += dt;
+    if (s.x >= PX + 4 && !s.missed) {
+      if (s.lane === G.lane) {
+        s.dead = true; G.stun = 1.4; G.shake = .5; G.throwT = 0;
+        addText('BONK!', PX, feetY(G.lane) - 52, C.bile, 1.2);
+        burst(10, PX + 10, feetY(G.lane) - 30, CANDIES[s.c].col, {spread: 90, g: 200, life: .6});
+        sfx.bonk();
+      } else s.missed = true;
+    }
+    if (s.x > W + 20) s.dead = true;
+  }
+  G.shots = G.shots.filter(s => !s.dead);
 
   for (const m of G.mons) {
     m.ph += dt * (m.boss ? 3.5 + m.mult : 6 + m.mult * 2);
@@ -1524,10 +1546,22 @@ function drawHero() {
   ctx.fillStyle = rg(x, fy - 16, 0, 60, ['rgba(255,150,40,.2)', 'rgba(255,90,20,.05)', 'rgba(0,0,0,0)']); ctx.fillRect(x - 80, fy - 80, 160, 130);
   ctx.restore();
   if (!lift) ell(x, fy, 10, 2.4, 'rgba(0,0,6,.6)', 0, false);
+  // knocked down by a boss's candy: falls back fast, lies there, then gets up
+  const st = G && !struggle ? G.stun : 0, fall = st > .3 ? Math.min(1, (1.4 - st) / .12) : st / .3;
   ctx.translate(x, fy - lift * 34 + (lift ? Math.sin(T * 12) * 1.2 : 0));
-  ctx.rotate(-lift * Math.PI / 2);
+  ctx.rotate(-lift * Math.PI / 2 + fall * 1.35);
   ctx.scale(-1, 1);
-  drawHunter(p, throwing, struggle);
+  drawHunter(p, throwing && !st, struggle);
+  ctx.restore();
+  if (st > 0) {
+    const hx = x + Math.sin(fall * 1.35) * 30, hy = fy - Math.cos(fall * 1.35) * 30 - 8;
+    for (let k = 0; k < 3; k++) {
+      const a = T * 6 + k * TAU / 3, sx = hx + Math.cos(a) * 9, sy = hy + Math.sin(a) * 3;
+      ctx.save(); ctx.translate(sx, sy); ctx.rotate(T * 4);
+      poly([0, -3, .9, -1, 3, -1, 1.3, .4, 2, 2.8, 0, 1.4, -2, 2.8, -1.3, .4, -3, -1, -.9, -1], C.bile);
+      ctx.restore();
+    }
+  }
   ctx.restore();
 }
 function drawWorld() {
@@ -1551,6 +1585,17 @@ function drawWorld() {
         ctx.fillStyle = rg(c.x, cy, 0, 12, ['rgba(232,255,58,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, cy - 12, 24, 24);
         ctx.restore();
         drawCandy(c.c, c.x, cy, 1.05, -c.t * 12);
+      }
+      for (const s of G.shots) {
+        if (s.lane !== i) continue;
+        const cy = feetY(i) - 14 - Math.abs(Math.sin(s.t * 7)) * 6;
+        ell(s.x, feetY(i), 5, 1.6, 'rgba(0,0,6,.5)', 0, false);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        for (let k = 1; k <= 3; k++) { ctx.globalAlpha = .3 / k; ell(s.x - k * 7, cy, 4, 3, C.blood, 0, false); }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = rg(s.x, cy, 0, 15, ['rgba(255,34,64,.45)', 'rgba(0,0,0,0)']); ctx.fillRect(s.x - 15, cy - 15, 30, 30);
+        ctx.restore();
+        drawCandy(s.c, s.x, cy, 1.25, s.t * 14);
       }
     } else {
       // the home screen stages its own cast
@@ -1656,6 +1701,7 @@ function drawBossUI() {
     titleText(b.sp.name, W / 2, 120, 42);
     txt('sort de sa cachette!', W / 2, 166, C.blood, 'center', 22, 'horror');
     txt('Il lui faut ' + n + ' bonbons qu\'il aime pour s\'en retourner.', W / 2, 198, C.bone, 'center', 14);
+    txt('Gare aux bonbons qu\'il te relance : change de sentier!', W / 2, 218, C.bile, 'center', 13);
     ctx.restore();
   }
 }
@@ -1788,7 +1834,7 @@ function drawIntro() {
     txt('Plus nombreux. Plus rapides.', W / 2, y + 40, C.blood, 'center', 20, 'horror');
     y += 84;
   }
-  const hint = G.cfg.boss ? 'Attention! Au bout de ce niveau, un BOSS sort de sa cachette. Il lui faudra plusieurs bonbons…'
+  const hint = G.cfg.boss ? 'Attention! Au bout de ce niveau, un BOSS sort de sa cachette. Il te relance les bonbons qu\'il déteste : change de sentier pour les éviter!'
     : G.level === 1 ? 'Lance des bonbons et observe : que préfèrent ces créatures?'
     : newSp.length ? 'Que préfère cette créature? Teste, puis vérifie ton grimoire (Échap).'
     : G.cfg.total + ' monstres affamés sortent de leurs cachettes.';
@@ -1891,7 +1937,7 @@ function proceed() {
   else if (scene === 'over') { if (G.qualifies) submitName(); else goBoard(); }
   else if (scene === 'board') { G = null; setTheme(0); setScene('title'); titlePage = 1; }
 }
-function moveLane(d) { G.lane = Math.max(0, Math.min(NL - 1, G.lane + d)); }
+function moveLane(d) { if (G.stun > 0) return; G.lane = Math.max(0, Math.min(NL - 1, G.lane + d)); }
 function selectCandy(i) {
   if (!G || i < 0 || i >= G.cList.length || i === G.sel) return;
   G.sel = i; sfx.select();
@@ -1951,7 +1997,7 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   if (scene === 'play') {
-    if (y >= LT && y < LT + NL * LH) {
+    if (y >= LT && y < LT + NL * LH && !(G.stun > 0)) {
       G.lane = Math.max(0, Math.min(NL - 1, Math.floor((y - LT) / LH)));
       throwCandy();
     }

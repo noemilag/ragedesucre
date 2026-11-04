@@ -29,11 +29,15 @@
 html,body{height:100%}
 body{margin:0;background:var(--void);color:var(--bone);overflow:hidden;display:grid;place-items:center;font-family:var(--font-ui)}
 canvas{display:block;cursor:pointer;outline:none;touch-action:none}
-canvas:focus-visible{outline:2px solid var(--toxic)}
+canvas:focus-visible{outline:2px solid #ffc24a}
+@media (pointer: coarse){canvas:focus-visible{outline:none}}
 #maj{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;
   font:700 17px var(--font-ui);letter-spacing:.02em;color:#1a0a00;background:linear-gradient(#ffc070,#ff8a1f);
   border:2px solid #ffe0a8;border-radius:999px;padding:10px 22px;box-shadow:0 0 18px rgba(255,138,31,.6),0 4px 12px rgba(0,0,0,.6);cursor:pointer}
 #maj:focus-visible{outline:3px solid var(--bone);outline-offset:3px}
+/* phone held upright: the game is turned a quarter turn so it fills the screen; hold the phone sideways to play */
+body.tourne canvas{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
+body.tourne #maj{left:calc(30px + env(safe-area-inset-left,0px));top:50%;bottom:auto;transform:translate(-50%,-50%) rotate(90deg)}
 </style>
 </head>
 <body>
@@ -2244,9 +2248,13 @@ window.addEventListener('keydown', e => {
     titlePage = 1 - titlePage; sceneT = 0;
   } else if ((k === 'Enter' || k === ' ') && !e.repeat && sceneT > .6) proceed();
 });
+let turned = false;
 function toCanvas(e) {
   const r = cv.getBoundingClientRect();
-  return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height];
+  if (!turned) return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height];
+  // undo the quarter turn: screen down is the game's right, screen left is the game's down
+  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  return [W / 2 + dy * W / r.height, H / 2 - dx * H / r.width];
 }
 cv.addEventListener('pointerdown', e => {
   cv.focus();
@@ -2293,7 +2301,10 @@ let fitTimer = null;
 function fit() {
   const vw = window.innerWidth || document.documentElement.clientWidth || W;
   const vh = window.innerHeight || document.documentElement.clientHeight || H;
-  const s = Math.max(.2, Math.min(vw / W, vh / H));
+  // on a phone held upright, turn the game a quarter turn so it fills the screen
+  turned = vh > vw && !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  document.body.classList.toggle('tourne', turned);
+  const s = turned ? Math.max(.2, Math.min(vh / W, vw / H)) : Math.max(.2, Math.min(vw / W, vh / H));
   const cssW = Math.max(64, Math.floor(W * s)), cssH = Math.max(36, Math.floor(H * s));
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
@@ -2313,7 +2324,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261104-2241';
+const VERSION = '20261104-2243';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

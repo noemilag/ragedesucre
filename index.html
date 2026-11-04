@@ -36,11 +36,13 @@ canvas:focus-visible{outline:2px solid #ffc24a}
   border:2px solid #ffe0a8;border-radius:999px;padding:10px 22px;box-shadow:0 0 18px rgba(255,138,31,.6),0 4px 12px rgba(0,0,0,.6);cursor:pointer}
 #maj:focus-visible{outline:3px solid var(--bone);outline-offset:3px}
 /* phone held upright: the game is turned a quarter turn so it fills the screen; hold the phone sideways to play */
-body.tourne canvas{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
+body.tourne canvas{position:fixed;left:var(--cx,50%);top:var(--cy,50%);transform:translate(-50%,-50%) rotate(90deg)}
+#zone{position:fixed;inset:0;pointer-events:none;visibility:hidden;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 body.tourne #maj{left:calc(30px + env(safe-area-inset-left,0px));top:50%;bottom:auto;transform:translate(-50%,-50%) rotate(90deg)}
 </style>
 </head>
 <body>
+<div id="zone"></div>
 <button id="maj" type="button" hidden>✨ Nouvelle version — Mettre à jour</button>
 <canvas id="g" tabindex="0" aria-label="Jeu Sortilèges sucrés : flèches pour changer de sentier, espace pour lancer un bonbon"></canvas>
 
@@ -1794,7 +1796,7 @@ function drawWorld() {
         ctx.fillStyle = rg(c.x, cy, 0, 12, ['rgba(232,255,58,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, cy - 12, 24, 24);
         ctx.restore();
         for (let k = 1; k <= 4; k++) glowEye(c.x + k * 5, cy + Math.sin(c.t * 20 + k) * 2, .9 - k * .15, k % 2 ? C.orange : '#ffe070', 5);
-        drawCandy(c.c, c.x, cy, 1.05, -c.t * 12);
+        drawCandy(c.c, c.x, cy, 1.25, -c.t * 12);
       }
       if (G.lan && G.lan.lane === i) drawFloatingLantern(G.lan, i);
       if (G.potion && G.potion.lane === i) drawPotion(G.potion, i);
@@ -1855,7 +1857,7 @@ function drawBar(withCandies) {
       rrect(x, y, 26, 21, 4); ctx.fillStyle = on ? 'rgba(255,194,74,.16)' : 'rgba(30,24,70,.6)'; ctx.fill();
       ctx.strokeStyle = on ? C.gold : C.mute; ctx.lineWidth = on ? 1.4 : .8; ctx.stroke();
       ctx.restore();
-      drawCandy(G.cList[i], x + 13, y + 10.5, .95);
+      drawCandy(G.cList[i], x + 13, y + 10.5, 1.15);
       txt(String(i + 1), x + 3, y + 1, on ? C.bile : C.mute, 'left', 7, 'ui', null);
     }
     const cs = CANDIES[G.cList[G.sel]];
@@ -2302,7 +2304,15 @@ function fit() {
   // on a phone held upright, turn the game a quarter turn so it fills the screen
   turned = vh > vw && !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
   document.body.classList.toggle('tourne', turned);
-  const s = turned ? Math.max(.2, Math.min(vh / W, vw / H)) : Math.max(.2, Math.min(vw / W, vh / H));
+  // keep the turned game clear of the status bar, the notch and the home indicator
+  let ah = vh, aw = vw;
+  if (turned) {
+    const z = getComputedStyle(document.getElementById('zone')), px = k => parseFloat(z[k]) || 0;
+    const top = Math.max(px('paddingTop'), 20) + 6, bot = Math.max(px('paddingBottom'), 0) + 10, lft = px('paddingLeft'), rgt = px('paddingRight');
+    ah = vh - top - bot; aw = vw - lft - rgt;
+    document.body.style.setProperty('--cy', (top + ah / 2) + 'px'); document.body.style.setProperty('--cx', (lft + aw / 2) + 'px');
+  }
+  const s = turned ? Math.max(.2, Math.min(ah / W, aw / H)) : Math.max(.2, Math.min(vw / W, vh / H));
   const cssW = Math.max(64, Math.floor(W * s)), cssH = Math.max(36, Math.floor(H * s));
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
@@ -2322,7 +2332,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261104-2347';
+const VERSION = '20261104-2351';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

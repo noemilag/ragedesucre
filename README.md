@@ -1,6 +1,6 @@
 # Rage de sucre
 
-Un jeu d'arcade inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, le jeune chasseur de monstres. Aide-le à leur lancer des bonbons avec son lance-pierres : chaque créature a ses favoris… et ceux qu'elle déteste.
+Un jeu d'arcade inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, l'apprenti magicien. Aide-le à leur lancer des bonbons avec sa baguette magique : chaque créature a ses favoris… et ceux qu'elle déteste.
 
 - Un monstre qui **aime** son bonbon le dévore et retourne dans sa tombe.
 - S'il le **déteste**, il enrage et accélère.
@@ -28,6 +28,7 @@ Ouvre `index.html` dans un navigateur. Aucun outil à installer.
   3. **Le château maudit** : toutes les créatures réunies
 - Un **boss** au 3e niveau de chaque monde (Frankenstein, la sorcière, le roi citrouille) : il lui faut plusieurs bonbons qu'il aime pour s'en retourner, et la musique devient plus lourde quand il sort
 - Après le 3e monde, le cauchemar recommence, plus rapide
+- **La forêt maléfique** : quand Léo perd sa dernière lanterne, les monstres l'emportent dans la forêt. Donne au Gardien de la forêt les 5 bonbons qu'il réclame dans sa bulle et Léo revient avec toutes ses lanternes. Une seule chance par monde
 - Musique et effets sonores générés dans le navigateur (Web Audio)
 - Tableau des records : partagé entre joueurs sur la version publiée sur claude.ai, sinon enregistré sur l'appareil
 

@@ -456,6 +456,31 @@ function drawPumpkinKing(p, o) {
   poly([-6, -83, -7, -90, -3, -86.5, 1, -92.5, 5, -86.5, 9, -90, 8, -83], lg(0, -92, 0, -83, ['#fff0a0', '#e8b030', '#a87010']));
   ell(1, -86.4, 1, 1, C.blood, 0, false); ell(-4, -85.6, .8, .8, C.acid, 0, false); ell(6, -85.6, .8, .8, C.acid, 0, false);
 }
+// the Forest Guardian: a walking tree that holds Léo in the evil forest
+function drawTreant(p, o) {
+  const sw = Math.sin(T * 1.4 + o.seed), s = Math.sin(p);
+  // root legs
+  [[-6, s], [6, -s]].forEach(([x, k]) => { limb(x, -18, x + k * 6, -2, 6, '#3a2414'); [-3, 0, 3].forEach(d => limb(x + k * 6, -2, x + k * 6 + d * 1.6, .5, 1.6, '#3a2414')); });
+  // back branch arm
+  limb(-6, -52, -20, -66 + sw * 2, 4, '#3a2414'); limb(-20, -66 + sw * 2, -26, -72 + sw * 2, 2, '#3a2414');
+  // trunk with bark
+  poly([-13, -14, 13, -14, 11, -40, 8, -66, -8, -66, -11, -40], lg(-12, 0, 12, 0, ['#2a1a0e', '#5a3a22', '#3a2414']));
+  [[-7, -20, -5, -56], [0, -18, 1, -48], [6, -22, 5, -60], [-3, -60, -2, -50]].forEach(([a, b, c, d]) => line(a, b, c, d, '#20140a', .9));
+  ell(-5, -30, 2.4, 3.2, '#20140a'); ell(-5, -30, 1.2, 1.8, '#0a0604', 0, false);
+  // leafy crown, dark and spiky
+  [[-10, -70, 9], [2, -76, 11], [12, -68, 8], [-2, -66, 9], [8, -80, 6]].forEach(([a, b, r]) => ell(a, b, r, r * .85, '#14261a'));
+  [[-10, -72, 7], [2, -78, 9], [12, -70, 6], [8, -82, 4]].forEach(([a, b, r]) => ell(a, b, r, r * .8, lg(0, b - r, 0, b + r, ['#2e5a34', '#14261a']), 0, false));
+  [[-14, -74], [-4, -84], [10, -86], [16, -74], [4, -70]].forEach(([a, b]) => ell(a, b, .9, .9, C.blood, 0, false));
+  // angry face
+  poly([-1, -54, 9, -52.5, 8, -50.5, 0, -51.8], '#1a0e06');
+  glowEye(6.5, -48.5, 1.8, C.orange, 10); glowEye(1, -48.8, 1.6, C.orange, 10);
+  ctx.beginPath(); ctx.moveTo(-1, -40); ctx.lineTo(10, -41); ctx.lineTo(9, -35); ctx.lineTo(0, -35.5); ctx.closePath(); ctx.fillStyle = '#120804'; ctx.fill();
+  for (let k = 0; k < 4; k++) poly([.5 + k * 2.4, -40.4, 1.6 + k * 2.4, -38, 2.6 + k * 2.4, -40.6], '#e8d8a0', false);
+  // front branch arm reaching for Léo
+  limb(6, -46, 24, -42 - sw * 2, 4.4, '#4a2e1a');
+  [[-1, -4], [0, 0], [1, 4]].forEach(([d, e]) => limb(24, -42 - sw * 2, 30 + Math.abs(d), -42 - sw * 2 + e, 1.4, '#4a2e1a'));
+}
+const GUARDIAN = {id:'treant', name:'Le Gardien de la forêt', likes:[], hates:[], cry:'GROAAAR!', col:C.orange, pitch:42, w:40, h:88, draw:drawTreant};
 const BOSSES = [
   {id:'frank', name:'Frankenstein', likes:['choco','bear'], hates:['lolly'], need:3, cry:'RRRAAAH!', col:C.toxic, pitch:45, w:40, h:84, draw:drawFrank},
   {id:'witch', name:'La sorcière', likes:['licorice','floss'], hates:['peach'], need:4, cry:'HI HI HIII!', col:C.hot, pitch:330, w:38, h:92, draw:drawWitch},
@@ -1052,6 +1077,7 @@ function prepLevel() {
   setTheme(G.st.wi);
 }
 function beginLevel() {
+  G.rescued = false;
   G.spawned = 0; G.spawnT = 1.2; G.mons = []; G.candies = [];
   Music.tempo = levelTempo(); Music.mode = 'normal';
   setScene('play');
@@ -1093,7 +1119,7 @@ function spawnBoss() {
   sfx.bossIn();
 }
 function throwCandy() {
-  if (scene !== 'play' || G.cool > 0 || G.stun > 0) return;
+  if ((scene !== 'play' && scene !== 'forest') || G.cool > 0 || G.stun > 0) return;
   G.cool = .22; G.throwT = .15;
   G.candies.push({c: G.cList[G.sel], lane: G.lane, x: PATH_X1 - 8, t: 0});
   burst(5, PX - 4, feetY(G.lane) - 28, C.bile, {vx: -40, vy: -30, spread: 50, g: 0, life: .35, w: 1, h: 1});
@@ -1193,6 +1219,70 @@ function bossMove(m, dt) {
     m.hopT = Math.max(1.6, 3 + Math.random() * 3 - m.anger * .5);
   }
 }
+// the evil forest: a second chance once per world. Feed the Guardian the candy it asks for, 5 times, and Léo comes back
+const canRescue = () => G.rescueWorld !== G.st.num;
+function startForest() {
+  G.rescueWorld = G.st.num; G.inForest = true; G.taken = false; G.carriers = null;
+  G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.lane = 1; G.py = feetY(1); G.cool = 0; G.throwT = 0;
+  G.boss = null; G.bossDone = false; G.bossIntro = 0;
+  const lane = (Math.random() * NL) | 0;
+  G.guard = {sp: GUARDIAN, boss: true, guard: true, extra: true, lane, x: 30, w: GUARDIAN.w, h: GUARDIAN.h, fy: feetY(lane),
+             speed: 12 + Math.min(G.level, 12) * .7, mult: 1, anger: 0, state: 'walk', t: 0, dur: 1, ph: 0, seed: 1, rise: 0,
+             hopT: 3, hop: 0, chew: 0, fed: 0, need: 5, want: pickWant(-1)};
+  G.mons.push(G.guard);
+  setTheme(1);
+  Music.mode = 'boss'; Music.tempo = 96; if (prefs.music) musicStart();
+  setScene('forestIntro');
+}
+const pickWant = prev => { let c; do { c = G.cList[(Math.random() * G.cList.length) | 0]; } while (G.cList.length > 1 && c === prev); return c; };
+function forestHit(m, cid) {
+  const cx = m.x + m.w / 2, top = monTop(m);
+  if (cid === m.want) {
+    m.fed++; m.chew = .7; m.x = Math.max(20, m.x - 55); G.score += 60 + 10 * G.level;
+    for (let i = 0; i < 5; i++) G.parts.push({x: cx + (Math.random() - .5) * 24, y: top + 10, vx: (Math.random() - .5) * 30, vy: -30 - Math.random() * 25, g: 0, life: 1.1, max: 1.1, col: C.hot, kind: 'heart'});
+    sfx.munch();
+    if (m.fed >= m.need) {
+      m.state = 'sleep'; G.forestT = 3.2; setScene('forestWin');
+      addText('ZZZ...', cx, top - 10, C.acid, 3, 'horror');
+      Music.mode = 'normal'; sfx.bossWin();
+      return;
+    }
+    addText('MIAM! ' + m.fed + '/' + m.need, cx, top - 14, C.toxic, 1.2);
+    m.want = pickWant(m.want);
+  } else {
+    m.state = 'react'; m.dur = m.t = .7; G.shake = .6; m.mult = Math.min(m.mult * 1.18, 2.2);
+    addText(GUARDIAN.cry, cx, top - 14, C.orange, 1.2);
+    burst(14, cx, top + 30, '#5a3a22', {spread: 120, g: 160, w: 3, h: 1.4, kind: 'bar'});
+    sfx.roar();
+  }
+}
+function updateForest(dt) {
+  G.cool -= dt; G.throwT -= dt; G.stun = Math.max(0, G.stun - dt);
+  const m = G.guard;
+  for (const c of G.candies) {
+    c.x -= 260 * dt; c.t += dt;
+    if (c.lane === m.lane && m.hop < .25 && c.x <= m.x + m.w - 4 && c.x >= m.x - 14) { forestHit(m, c.c); c.dead = true; if (scene !== 'forest') break; continue; }
+    if (c.x < 10) { c.dead = true; burst(6, 14, feetY(c.lane) - 4, CANDIES[c.c].col, {spread: 60, g: 200, life: .4}); sfx.waste(); }
+  }
+  G.candies = G.candies.filter(c => !c.dead);
+  if (scene !== 'forest') return;
+  m.ph += dt * (3.5 + m.mult);
+  bossMove(m, dt);
+  if (m.state === 'walk') m.x += m.speed * m.mult * (m.chew > 0 ? .25 : 1) * dt;
+  else if ((m.t -= dt) <= 0) { m.state = 'walk'; m.anger++; }
+  if (m.x + m.w >= PATH_X1 - 4) {
+    // caught for good this time
+    G.inForest = false; G.shake = .8; musicStop(); sfx.grab(); sfx.gameover();
+    addText('ATTRAPÉ!', PX, laneTop(G.lane) - 2, C.blood, 2);
+    G.qualifies = !G.cheat && qualifies(G.score); setScene('over');
+  }
+}
+function leaveForest() {
+  G.inForest = false; G.guard = null; G.lives = 3; G.rescued = true;
+  G.bonus = 0; G.extraLife = false; G.victory = false;
+  prepLevel(); Music.mode = 'normal';
+  setScene('intro'); sfx.level();
+}
 function loseLife(m) {
   G.lives--;
   if (G.lives <= 0) { startCaught(m); return; }
@@ -1276,9 +1366,11 @@ function update(dt) {
       if (!G.helpSaid) { G.helpSaid = true; addText('AU SECOURS!', G.hx - 20, fy - 80, C.bone, 1.6); }
       if (Math.random() < dt * 14) burst(1, G.hx - 10, fy - 1, '#2a2a3a', {vy: -20, spread: 30, g: 80, life: .5});
     }
-    if (G.hx < -80) { G.qualifies = !G.cheat && qualifies(G.score); setScene('over'); }
+    if (G.hx < -80) { if (canRescue()) startForest(); else { G.qualifies = !G.cheat && qualifies(G.score); setScene('over'); } }
     return;
   }
+  if (scene === 'forest') { updateForest(dt); return; }
+  if (scene === 'forestWin') { if ((G.forestT -= dt) <= 0) leaveForest(); return; }
   if (scene !== 'play') return;
 
   G.cool -= dt; G.throwT -= dt; G.bossIntro -= dt;
@@ -1476,35 +1568,44 @@ function drawMonster(m) {
     }
   }
   if (m.state === 'meh') txt('?', x, fy - m.h - 14 + dy, C.dim, 'center', 14, 'horror');
+  if (m.state === 'sleep') for (let k = 0; k < 3; k++) txt('Z', x + 10 + k * 7, fy - m.h - 6 - k * 9 - (T * 8 % 9), C.acid, 'left', 10 + k * 3, 'horror');
   ctx.restore();
 }
-function slingshot(x, y, pulled) {
-  limb(x, y + 5, x, y, 1.5, '#8a5428');
-  limb(x, y, x - 2.2, y - 4, 1.2, '#8a5428'); limb(x, y, x + 2.2, y - 4, 1.2, '#8a5428');
-  ctx.beginPath(); ctx.moveTo(x - 2.2, y - 4);
-  if (pulled) ctx.quadraticCurveTo(x + 4, y - 2, x + 2.2, y - 4); else ctx.lineTo(x + 2.2, y - 4);
-  ctx.strokeStyle = C.blood; ctx.lineWidth = .8; ctx.stroke();
+function star5(x, y, r, col) {
+  const pts = [];
+  for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r; pts.push(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  poly(pts, col, r >= 1.6);
 }
+// a wooden wand topped with an orange star; lit while casting
+function wand(x, y, ang, lit) {
+  const tx = x + Math.cos(ang) * 9, ty = y + Math.sin(ang) * 9;
+  limb(x, y, tx, ty, 1.1, '#5a3418');
+  if (lit) {
+    glowEye(tx, ty, 2.2, '#ffb030', 12);
+    for (let k = 0; k < 4; k++) { const a = T * 9 + k * TAU / 4; glowEye(tx + Math.cos(a) * 3.6, ty + Math.sin(a) * 3.6, .5, k % 2 ? '#ffe070' : C.orange, 5); }
+  }
+  ctx.save(); ctx.translate(tx, ty); ctx.rotate(T * (lit ? 6 : 1)); star5(0, 0, lit ? 2.4 : 1.8, C.orange); ctx.restore();
+}
+// Léo, the young wizard (navy robe and hat, orange accents)
 function drawHunter(p, throwing, struggle, bag) {
-  legs(p, '#3a2a1e', 7, 2.6, 3, '#1a0e08');
-  // coat tail flapping behind
-  poly([-3, -21, -8.5, -8, -5.5 - Math.sin(T * 3) * .8, -3.5, 0, -6], '#3e2412');
+  legs(p, '#2a2450', 7, 2.6, 3, '#4a2410');
+  // cape flapping behind, lined in orange
+  poly([-4, -21, -10.5 - Math.sin(T * 3) * .8, -5, -7, -2.5, 0, -6], '#22165a');
+  line(-4, -21, -10.5 - Math.sin(T * 3) * .8, -5, C.orange, .7);
   // satchel of candies at the back hip
   rrect(-9.6, -11.6, 6.2, 5.2, 1.2); sh('#6a4020', .7); line(-9.6, -10, -3.4, -10, '#3a2010', .6);
   if (bag !== undefined) drawCandy(bag, -6.6, -13, .38, -.4);
   else if (G && G.cList) drawCandy(G.cList[G.sel], -6.6, -13, .38, -.4);
-  // long hunter coat
-  poly([-6.5, -5, 6.5, -5, 5.5, -21, -5.5, -21], lg(-6, 0, 6, 0, ['#4e2c16', '#8a5430']));
-  line(1, -21, 1, -6, '#2a160a', .7);
-  ell(2.2, -16, .6, .6, C.bile, 0, false); ell(2.2, -12.5, .6, .6, C.bile, 0, false);
-  rrect(-6.6, -10, 13.2, 2, .5); sh('#2a1a10', .6); rrect(-1.4, -10.4, 2.8, 2.8, .4); sh('#c8a040', .5);
-  // bandolier of potion vials
-  line(-5, -21, 5, -10, '#2a1a10', 1.8);
-  [[-2.6, -18.2, C.toxic], [0, -15.6, C.blood], [2.6, -13, C.acid]].forEach(([a, b, c]) => { rrect(a - .9, b - 1.6, 1.8, 3, .5); sh(c, .4); });
-  // red scarf
-  poly([-4.6, -22.2, 4.6, -22.2, 5, -19.6, -5, -19.6], C.blood);
+  // starry robe with an orange hem
+  poly([-7.5, -3, 7.5, -3, 5, -21, -5, -21], lg(-6, 0, 6, 0, ['#2a2a8a', '#3c3cb0', '#22226e']));
+  rrect(-7.7, -4.8, 15.4, 2, .5); sh(C.orange, .6);
+  line(1.2, -21, 1.8, -5, '#141448', .7);
+  star5(-3, -15, 1.1, '#ffd060'); star5(4, -9, .9, '#ffd060'); ell(-4.2, -8.4, .5, .5, '#ffd060', 0, false); ell(3.4, -16.6, .45, .45, '#ffd060', 0, false);
+  rrect(-5.8, -11.2, 11.6, 1.8, .5); sh('#3a2010', .6); rrect(-1.2, -11.6, 2.6, 2.6, .4); sh('#ffd060', .5);
+  // orange scarf
+  poly([-4.6, -22.2, 4.6, -22.2, 5, -19.6, -5, -19.6], C.orange);
   ctx.beginPath(); ctx.moveTo(-4, -21); ctx.quadraticCurveTo(-8, -20 + Math.sin(T * 5) * 1.2, -11, -17 + Math.sin(T * 5 + 1) * 1.6);
-  ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 3; ctx.stroke(); ctx.strokeStyle = C.blood; ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.lineCap = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 3; ctx.stroke(); ctx.strokeStyle = C.orange; ctx.lineWidth = 1.8; ctx.stroke();
   // big kid head
   ell(.5, -28.6, 7, 7, lg(0, -35, 0, -22, ['#f8dcc0', '#d8a080']));
   poly([-3, -31, -7.2, -29, -6.4, -25.6, -4.2, -27], '#6a3216');
@@ -1517,20 +1618,22 @@ function drawHunter(p, throwing, struggle, bag) {
   }
   [[.6, -26.6], [1.4, -26], [5.4, -26.3]].forEach(([a, b]) => ell(a, b, .3, .3, '#b86a40', 0, false));
   ell(6, -26.8, 1, .6, 'rgba(255,90,110,.45)', 0, false);
-  // wide-brimmed hunter hat with a crow feather
-  ctx.beginPath(); ctx.moveTo(-2, -38); ctx.quadraticCurveTo(-7, -42, -9, -47); ctx.strokeStyle = OUT; ctx.lineWidth = 2.6; ctx.stroke(); ctx.strokeStyle = '#23305e'; ctx.lineWidth = 1.5; ctx.stroke();
-  poly([-5.4, -33.4, 6.4, -33.4, 5.2, -39.6, .5, -41.4, -4.4, -39.6], lg(0, -41, 0, -33, ['#3a2a20', '#1e140e']));
-  rrect(-5.2, -35.6, 11.4, 1.6, .4); sh(C.blood, .5);
-  ell(.5, -33.3, 11.5, 2.3, lg(0, -35, 0, -31, ['#3a2a20', '#140c08']));
-  ctx.beginPath(); ctx.arc(.5, -38, 6, -1.3, -.3); ctx.strokeStyle = 'rgba(175,215,255,.55)'; ctx.lineWidth = .8; ctx.stroke();
-  // arm with slingshot
+  // tall wizard hat bending backwards, orange band and pompom
+  ell(.5, -33.3, 11, 2.2, lg(0, -35, 0, -31, ['#3a2a9a', '#1a1258']));
+  const sway = Math.sin(T * 2.4) * .7;
+  poly([-5, -34, 6, -34, 3.5, -41, .5, -47, -4.5 - sway, -51, -2.5, -45, -4.2, -40], lg(0, -51, 0, -34, ['#5a48c0', '#2c2088']));
+  rrect(-5, -36.6, 11, 2.1, .4); sh(C.orange, .5);
+  star5(1.4, -40.6, 1.4, '#ffd060');
+  ell(-4.9 - sway, -51.2, 1.3, 1.3, C.orange);
+  ctx.beginPath(); ctx.arc(.5, -38, 6, -1.3, -.4); ctx.strokeStyle = 'rgba(175,215,255,.5)'; ctx.lineWidth = .8; ctx.stroke();
+  // arm with the wand
   if (throwing || struggle) {
     const wob = struggle ? Math.sin(T * 16) * 3 : 0;
-    limb(3, -18, 13, -21 + wob, 2.6, '#6e4024'); ell(13.6, -21 + wob, 1.6, 1.6, '#f0c8a8');
-    if (!struggle) slingshot(14.6, -24, true);
+    limb(3, -18, 12, -23 + wob, 2.6, '#2e2e86'); ell(12.6, -23.4 + wob, 1.6, 1.6, '#f0c8a8');
+    if (!struggle) wand(12.6, -23.4, -.45, true);
   } else {
-    limb(3, -18, 7.5, -13.5, 2.6, '#6e4024'); ell(8, -13.4, 1.6, 1.6, '#f0c8a8');
-    slingshot(8.6, -17, false);
+    limb(3, -18, 7.5, -13.5, 2.6, '#2e2e86'); ell(8, -13.4, 1.6, 1.6, '#f0c8a8');
+    wand(8, -13.4, -1.15, false);
   }
 }
 function drawHero() {
@@ -1571,6 +1674,14 @@ function drawWorld() {
   if (G && G.shake > 0) ctx.translate((Math.random() - .5) * 5, (Math.random() - .5) * 4);
   ctx.drawImage(BG, 0, 0, W, H);
   drawSkyLife();
+  if (G && G.inForest) {
+    // the evil forest: darker, reddish, full of eyes
+    ctx.fillStyle = 'rgba(30,0,24,.5)'; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 14; i++) {
+      const ex = 20 + (i * 151) % 600, ey = 90 + (i * 67) % 230;
+      if (Math.sin(T * .9 + i * 2.3) > .2 && Math.floor(T * 4 + i) % 13) { glowEye(ex, ey, .9, i % 3 ? C.blood : C.orange, 6); glowEye(ex + 4.5, ey, .9, i % 3 ? C.blood : C.orange, 6); }
+    }
+  }
   for (let i = 0; i < NL; i++) {
     drawGraveGlow(i);
     if (G && scene !== 'title') {
@@ -1586,6 +1697,7 @@ function drawWorld() {
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
         ctx.fillStyle = rg(c.x, cy, 0, 12, ['rgba(232,255,58,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, cy - 12, 24, 24);
         ctx.restore();
+        for (let k = 1; k <= 4; k++) glowEye(c.x + k * 5, cy + Math.sin(c.t * 20 + k) * 2, .9 - k * .15, k % 2 ? C.orange : '#ffe070', 5);
         drawCandy(c.c, c.x, cy, 1.05, -c.t * 12);
       }
       for (const s of G.shots) {
@@ -1687,6 +1799,41 @@ function drawBoard(x, y, w, highlight, limit = 10, rowH = 15) {
     txt(pad(r.score, 6), x + w - 8, y + i * rowH, col, 'right', 12, 'ui', null);
   });
 }
+function drawForestUI() {
+  const m = G.guard;
+  if (!m) return;
+  // hunger meter
+  const n = m.need, w = 172 + n * 14, x0 = W / 2 - w / 2;
+  rrect(x0, 21, w, 21, 5); ctx.fillStyle = 'rgba(3,5,12,.88)'; ctx.fill(); ctx.strokeStyle = C.orange; ctx.lineWidth = 1; ctx.stroke();
+  txt(GUARDIAN.name, x0 + 8, 23, C.orange, 'left', 15, 'horror');
+  for (let i = 0; i < n; i++) {
+    const hx = x0 + w - 12 - (n - 1 - i) * 14;
+    if (i < m.fed) heart(hx, 26, C.hot, 10); else { heartPath(hx, 26, 10); ctx.strokeStyle = C.mute; ctx.lineWidth = 1; ctx.stroke(); }
+  }
+  if (scene !== 'forest') return;
+  // thought bubble with the candy it wants
+  const bx = m.x + m.w / 2 + 16, by = monTop(m) - 18 + Math.sin(T * 3) * 1.5;
+  ell(bx - 12, by + 16, 1.6, 1.6, '#f4f0ff'); ell(bx - 7, by + 11, 2.4, 2.4, '#f4f0ff');
+  ell(bx + 4, by, 13, 11, '#f4f0ff');
+  drawCandy(m.want, bx + 4, by, 1.25, Math.sin(T * 2) * .2);
+}
+function drawForestIntro() {
+  ctx.fillStyle = 'rgba(2,3,10,.55)'; ctx.fillRect(0, 0, W, 330);
+  panel(110, 52, 420, 256);
+  titleText('La forêt maléfique', W / 2, 64, 30);
+  ctx.save(); ctx.translate(196, 236); ctx.scale(1.2, 1.2); drawTreant(T * 3, {seed: 1}); ctx.restore();
+  const lines = [
+    'Les monstres ont emporté Léo dans la forêt maléfique.',
+    'Le Gardien de la forêt lui barre la route.',
+    'Lance-lui le bonbon qu\'il montre dans sa bulle.',
+    'Après ' + G.guard.need + ' bonbons, il s\'endort et Léo revient',
+    'avec toutes ses lanternes!',
+  ];
+  lines.forEach((l, i) => txt(l, 248, 116 + i * 18, i === 4 ? C.toxic : C.bone, 'left', 13, 'ui', null, i === 4 ? 700 : 500));
+  txt('Mais s\'il attrape Léo... c\'est vraiment la fin.', 248, 214, C.blood, 'left', 13);
+  txt('Une seule chance par monde.', 248, 234, C.dim, 'left', 11, 'ui', null, 500);
+  if (blink()) txt('ESPACE ou clic pour commencer', W / 2, 276, C.toxic, 'center', 17, 'horror');
+}
 function drawBossUI() {
   if (!G || !G.boss || G.bossDone || scene === 'caught') return;
   const b = G.boss, n = b.need, w = 132 + n * 14, x0 = W / 2 - w / 2;
@@ -1753,7 +1900,7 @@ function drawLeoStage() {
   drawHunter(0, shoot, false, Math.floor(T / 3) % 8);
   ctx.restore();
   if (cyc < 1.3 && T > 3) {
-    const k = cyc / 1.3, cx = x - 48 - k * 360, cy = fy - 75 - Math.sin(k * Math.PI) * 30;
+    const k = cyc / 1.3, cx = x - 64 - k * 360, cy = fy - 86 - Math.sin(k * Math.PI) * 30;
     ctx.save(); ctx.globalAlpha = 1 - Math.max(0, k - .8) * 5; drawCandy(Math.floor(T / 3 - 1) % 8, cx, cy, 1.8, -T * 10); ctx.restore();
   }
 }
@@ -1775,7 +1922,7 @@ function drawTitle() {
   drawLeoStage();
   // title
   bigTitle('RAGE DE SUCRE', W / 2, 14, 58);
-  txt('Les créatures sortent de l\'ombre. Aide Léo, le chasseur de monstres,', W / 2, 78, C.bone, 'center', 12, 'ui', OUT, 500);
+  txt('Les créatures sortent de l\'ombre. Aide Léo, l\'apprenti magicien,', W / 2, 78, C.bone, 'center', 12, 'ui', OUT, 500);
   txt('à découvrir quels bonbons elles aiment et lesquels elles détestent pour s\'en débarrasser.', W / 2, 92, C.bone, 'center', 12, 'ui', OUT, 500);
   // info panel with tabs
   panel(178, 108, 284, 182);
@@ -1822,7 +1969,10 @@ function drawIntro() {
   titleText('Monde ' + fmtLevel(G.level), W / 2, 54, 30);
   txt(wd.name, W / 2, 86, C.acid, 'center', 16, 'horror');
   let y = 108;
-  if (G.bonus) {
+  if (G.rescued) {
+    txt('Léo s\'est échappé de la forêt! Toutes tes lanternes sont rallumées.', W / 2, y, C.toxic, 'center', 12, 'ui', null);
+    y += 16;
+  } else if (G.bonus) {
     const extra = G.victory ? '   ·   Les 3 mondes sont vaincus!' : G.extraLife ? '   ·   +1 lanterne!' : '';
     txt('Bonus de niveau +' + G.bonus + extra, W / 2, y, C.toxic, 'center', 12, 'ui', null);
     y += 16;
@@ -1927,6 +2077,9 @@ function render() {
   else {
     drawHUD();
     drawBossUI();
+    if (G && G.inForest) drawForestUI();
+    if (scene === 'forestIntro') drawForestIntro();
+    if (scene === 'forestWin') { titleText('Léo est libre!', W / 2, 120, 34); txt('Le Gardien dort. Retour au ' + WORLDS[G.st.wi].name.toLowerCase() + '!', W / 2, 166, C.bone, 'center', 15); }
     if (scene === 'pause') drawGrimoire();
     if (scene === 'over') drawOver();
     if (scene === 'board') drawBoardScene();
@@ -1949,6 +2102,7 @@ function proceed() {
   initAudio();
   if (scene === 'title') newGame();
   else if (scene === 'intro') beginLevel();
+  else if (scene === 'forestIntro') setScene('forest');
   else if (scene === 'pause') setScene('play');
   else if (scene === 'over') { if (G.qualifies) submitName(); else goBoard(); }
   else if (scene === 'board') { G = null; setTheme(0); setScene('title'); titlePage = 1; }
@@ -1979,14 +2133,14 @@ window.addEventListener('keydown', e => {
     if (cheatOn && /^[1-9]$/.test(k)) { startAt(+k); return; }
     if (cheatOn && k === 'Escape') { cheatOn = false; codeBuf = ''; return; }
   }
-  if (scene === 'play') {
+  if (scene === 'play' || scene === 'forest') {
     if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'z' || k === 'Z') moveLane(-1);
     else if (k === 'ArrowDown' || k === 's' || k === 'S') moveLane(1);
     else if (k === ' ' || k === 'ArrowLeft') throwCandy();
     else if (/^[1-8]$/.test(k)) selectCandy(+k - 1);
     else if (k === 'q' || k === 'Q' || k === 'a' || k === 'A') selectCandy((G.sel - 1 + G.cList.length) % G.cList.length);
     else if (k === 'e' || k === 'E' || k === 'Tab') selectCandy((G.sel + 1) % G.cList.length);
-    else if (k === 'Escape' || k === 'p' || k === 'P') setScene('pause');
+    else if ((k === 'Escape' || k === 'p' || k === 'P') && scene === 'play') setScene('pause');
   } else if (scene === 'pause') {
     if (k === 'Escape' || k === 'p' || k === 'P' || k === 'Enter' || k === ' ') setScene('play');
     else if (k === 't' || k === 'T') quitToHome();
@@ -2005,14 +2159,14 @@ cv.addEventListener('pointerdown', e => {
   if (y >= 332) {
     if (x >= BTN.music && x < BTN.music + 30) { toggleMusic(); return; }
     if (x >= BTN.sfx && x < BTN.sfx + 30) { toggleSfx(); return; }
-    if (scene === 'play') {
-      if (x >= BTN.book && x < BTN.book + 30) { setScene('pause'); return; }
+    if (scene === 'play' || scene === 'forest') {
+      if (scene === 'play' && x >= BTN.book && x < BTN.book + 30) { setScene('pause'); return; }
       const i = Math.floor((x - 8) / 30);
       if (x >= 8 && i < G.cList.length) selectCandy(i);
     }
     return;
   }
-  if (scene === 'play') {
+  if (scene === 'play' || scene === 'forest') {
     if (y >= LT && y < LT + NL * LH && !(G.stun > 0)) {
       G.lane = Math.max(0, Math.min(NL - 1, Math.floor((y - LT) / LH)));
       throwCandy();
@@ -2025,7 +2179,7 @@ cv.addEventListener('pointerdown', e => {
     return;
   }
   if (scene === 'title' && y >= 118 && y <= 138 && x > 180 && x < 460) { titlePage = x < W / 2 ? 0 : 1; sceneT = 0; return; }
-  if (scene === 'lost' || scene === 'caught') return;
+  if (scene === 'lost' || scene === 'caught' || scene === 'forestWin') return;
   if (sceneT > .6) proceed();
 });
 cv.addEventListener('pointermove', e => { [MX, MY] = toCanvas(e); cv.style.cursor = scene === 'pause' && !inBox(PAUSE_BTN.resume) && !inBox(PAUSE_BTN.quit) && MY < 330 ? 'default' : 'pointer'; });

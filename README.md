@@ -1,6 +1,6 @@
 # Sortilèges sucrés
 
-Un jeu d'arcade magique inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, l'apprenti magicien. Aide-le à leur lancer des bonbons avec sa baguette magique : chaque créature a ses favoris… et ceux qu'elle déteste.
+Un jeu d'arcade magique inspiré de *Tapper*. Dans un château enchanté, une forêt magique puis un cimetière plongé dans l'ombre, des monstres sortent de leurs cachettes et avancent sur quatre sentiers vers **Léo**, l'apprenti magicien. Aide-le à leur lancer des bonbons avec sa baguette magique : chaque créature a ses favoris… et ceux qu'elle déteste.
 
 - Un monstre qui **aime** son bonbon le dévore et retourne dans sa tombe.
 - S'il le **déteste**, il enrage et accélère.
@@ -23,9 +23,9 @@ Ouvre `index.html` dans un navigateur. Aucun outil à installer.
 ## Contenu
 
 - 3 mondes de 3 niveaux, avec chacun son décor, ses créatures et ses bonbons :
-  1. **Le cimetière** : zombie, momie, squelette, fantôme
-  2. **La forêt des ténèbres** : loup-garou, gobelin, vampire, troll
-  3. **Le château maudit** : toutes les créatures réunies
+  1. **Le château enchanté** : zombie, momie, squelette, fantôme
+  2. **La forêt magique** : loup-garou, gobelin, vampire, troll
+  3. **Le cimetière des ombres** : toutes les créatures réunies
 - Un **boss** au 3e niveau de chaque monde (Frankenstein, la sorcière, le roi citrouille) : il lui faut plusieurs bonbons qu'il aime pour s'en retourner, et la musique devient plus lourde quand il sort
 - Après le 3e monde, le cauchemar recommence, plus rapide
 - **La forêt maléfique** : quand Léo perd sa dernière lanterne, les monstres l'emportent dans la forêt. Donne au Gardien de la forêt les 5 bonbons qu'il réclame dans sa bulle et Léo revient avec toutes ses lanternes. Une seule chance par monde

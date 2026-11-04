@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#070a1e">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mystery+Quest&family=Creepster&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* Layout: one 16:9 stage (640x360 logical units) drawn at full screen resolution, letterboxed on black */
 :root{
@@ -22,7 +22,7 @@
   --bone:#e9ecf4;
   --toxic:#7dff3a;
   --blood:#ff2240;
-  --font-horror:"Mystery Quest", "Creepster", fantasy;
+  --font-horror:"Cinzel Decorative", "Georgia", serif;
   --font-ui:"Barlow Condensed", "Arial Narrow", sans-serif;
   color-scheme:dark;
 }
@@ -64,7 +64,7 @@ const C = {
   bone:'#e9ecf4', dim:'#7d8ab8', mute:'#3d4a7a', gold:'#ffc24a', violet:'#b98cff'
 };
 const OUT = '#02030a';
-const FONT = {ui: '"Barlow Condensed", "Arial Narrow", sans-serif', horror: '"Mystery Quest", "Creepster", fantasy'};
+const FONT = {ui: '"Barlow Condensed", "Arial Narrow", sans-serif', horror: '"Cinzel Decorative", Georgia, serif'};
 
 /* ---------- Drawing primitives (logical units) ---------- */
 const TAU = Math.PI * 2;
@@ -108,12 +108,12 @@ function heartPath(x, y, s) {
 function heart(x, y, col, s = 7) { heartPath(x, y, s); ctx.fillStyle = col; ctx.fill(); }
 function cross(x, y, col = C.blood, s = 7) { line(x, y, x + s, y + s, col, 2); line(x + s, y, x, y + s, col, 2); }
 function txt(s, x, y, col = C.bone, al = 'left', size = 11, font = 'ui', shadow = OUT, weight = 700) {
-  ctx.font = (font === 'ui' ? weight + ' ' : '') + size + 'px ' + FONT[font];
+  ctx.font = (font === 'ui' ? weight : 700) + ' ' + size + 'px ' + FONT[font];
   ctx.textAlign = al; ctx.textBaseline = 'top';
   if (shadow) { ctx.fillStyle = shadow; ctx.fillText(s, x + size * .08, y + size * .08); }
   ctx.fillStyle = col; ctx.fillText(s, x, y);
 }
-function textW(s, size, font = 'ui') { ctx.font = (font === 'ui' ? '700 ' : '') + size + 'px ' + FONT[font]; return ctx.measureText(s).width; }
+function textW(s, size, font = 'ui') { ctx.font = '700 ' + size + 'px ' + FONT[font]; return ctx.measureText(s).width; }
 function wrap(s, n) {
   const out = []; let l = '';
   s.split(' ').forEach(w => { if ((l + ' ' + w).trim().length > n) { out.push(l.trim()); l = w; } else l += ' ' + w; });
@@ -507,9 +507,9 @@ const BOSSES = [
 /* ---------- Worlds: 3 levels each, the 3rd ends with the boss ---------- */
 const spI = id => SPECIES.findIndex(s => s.id === id);
 const WORLDS = [
-  {name:'Le cimetière', boss:0, sp:[['zombie', 'mummy'], ['skeleton'], ['ghost']], c:[['choco', 'lolly'], ['eye'], ['bear']]},
-  {name:'La forêt des ténèbres', boss:1, sp:[['wolf', 'goblin'], ['vampire'], ['troll']], c:[['worm', 'licorice'], ['peach'], ['floss']]},
-  {name:'Le château maudit', boss:2, all:true},
+  {name:'Le château enchanté', theme:2, boss:0, sp:[['zombie', 'mummy'], ['skeleton'], ['ghost']], c:[['choco', 'lolly'], ['eye'], ['bear']]},
+  {name:'La forêt magique', theme:1, boss:1, sp:[['wolf', 'goblin'], ['vampire'], ['troll']], c:[['worm', 'licorice'], ['peach'], ['floss']]},
+  {name:'Le cimetière des ombres', theme:0, boss:2, all:true},
 ];
 const NW = WORLDS.length;
 function stageOf(n) { const w = Math.floor((n - 1) / 3); return {num: w + 1, wi: w % NW, cycle: Math.floor(w / NW), stage: (n - 1) % 3 + 1}; }
@@ -525,7 +525,7 @@ function worldLists(n) {
 }
 
 /* ---------- Scenery: one look per world, built once per resize at screen resolution ---------- */
-let THEME = 0;
+let THEME = WORLDS[0].theme;
 const TREES = [[0, 150], [1, 420], [2, 250], [3, 470], [1, 90]];
 const STONES = [];
 const CANDLES = [];
@@ -658,15 +658,15 @@ function deadTree(x, y, len, ang, w, depth, R) {
   for (let i = 0; i < n; i++) deadTree(x2, y2, len * (.6 + R() * .2), ang + (R() - .5) * 1.4, w * .62, depth - 1, R);
 }
 function skyCemetery(R) {
-  ctx.fillStyle = lg(0, 0, 0, 90, ['#010208', '#070f2e', '#13285e']); ctx.fillRect(0, 0, W, 90);
-  for (let i = 0; i < 140; i++) { ctx.globalAlpha = .3 + R() * .7; ell(R() * W, 16 + R() * 60, R() * .6 + .2, R() * .6 + .2, R() < .1 ? C.acid : '#dfe6ff', 0, false); }
+  ctx.fillStyle = lg(0, 0, 0, 90, ['#000003', '#06040e', '#1a0a1c']); ctx.fillRect(0, 0, W, 90);
+  for (let i = 0; i < 70; i++) { ctx.globalAlpha = .2 + R() * .5; ell(R() * W, 16 + R() * 60, R() * .5 + .2, R() * .5 + .2, '#d8c8d8', 0, false); }
   ctx.globalAlpha = 1;
   // moon
-  ctx.fillStyle = rg(520, 44, 10, 90, ['rgba(150,255,210,.35)', 'rgba(60,140,200,.12)', 'rgba(0,0,0,0)']); ctx.fillRect(400, 0, 240, 100);
-  ell(520, 44, 26, 26, rg(512, 36, 4, 28, ['#fbfff4', '#d8f0d8', '#9ac8b0']), 0, false);
-  [[-8, -6, 5], [7, 4, 4], [-3, 10, 3], [10, -9, 2.5], [-13, 5, 2]].forEach(([a, b, r]) => ell(520 + a, 44 + b, r, r, 'rgba(110,160,140,.35)', 0, false));
+  ctx.fillStyle = rg(520, 44, 10, 90, ['rgba(255,80,60,.32)', 'rgba(120,10,30,.12)', 'rgba(0,0,0,0)']); ctx.fillRect(400, 0, 240, 100);
+  ell(520, 44, 26, 26, rg(512, 36, 4, 28, ['#ffd8c8', '#e87060', '#902030']), 0, false);
+  [[-8, -6, 5], [7, 4, 4], [-3, 10, 3], [10, -9, 2.5], [-13, 5, 2]].forEach(([a, b, r]) => ell(520 + a, 44 + b, r, r, 'rgba(110,20,30,.35)', 0, false));
   // cloud bands across the moon
-  [[480, 52, 70, 4], [560, 36, 60, 3], [420, 30, 90, 3]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(6,12,34,.8)', 0, false));
+  [[480, 52, 70, 4], [560, 36, 60, 3], [420, 30, 90, 3]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(10,4,12,.85)', 0, false));
   // distant hill, chapel and fence
   ctx.fillStyle = '#050a1c';
   ctx.beginPath(); ctx.moveTo(0, 80); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, 72 - Math.sin(x / 90) * 6 - Math.sin(x / 31) * 2); ctx.lineTo(W, 80); ctx.fill();
@@ -697,15 +697,15 @@ function skyForest(R) {
   });
 }
 function skyCastle(R) {
-  ctx.fillStyle = lg(0, 0, 0, 90, ['#0a0206', '#2a0612', '#5a0e1e']); ctx.fillRect(0, 0, W, 90);
-  for (let i = 0; i < 40; i++) { ctx.globalAlpha = .2 + R() * .5; ell(R() * W, 8 + R() * 40, R() * .5 + .2, R() * .5 + .2, '#ffd8d8', 0, false); }
+  ctx.fillStyle = lg(0, 0, 0, 90, ['#05041a', '#151050', '#33207a']); ctx.fillRect(0, 0, W, 90);
+  for (let i = 0; i < 90; i++) { ctx.globalAlpha = .25 + R() * .6; ell(R() * W, 8 + R() * 56, R() * .5 + .2, R() * .5 + .2, R() < .15 ? '#ffe7a0' : '#e8e4ff', 0, false); }
   ctx.globalAlpha = 1;
-  ctx.fillStyle = rg(540, 34, 10, 90, ['rgba(255,120,120,.3)', 'rgba(160,20,40,.1)', 'rgba(0,0,0,0)']); ctx.fillRect(420, 0, 220, 90);
-  ell(540, 34, 22, 22, rg(534, 28, 3, 24, ['#fff0f0', '#ffa0a0', '#c04050']), 0, false);
-  [[520, 40, 60, 3], [580, 26, 50, 2.5]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(30,4,12,.85)', 0, false));
+  ctx.fillStyle = rg(540, 34, 10, 90, ['rgba(255,220,140,.32)', 'rgba(185,140,255,.1)', 'rgba(0,0,0,0)']); ctx.fillRect(420, 0, 220, 90);
+  ell(540, 34, 22, 22, rg(534, 28, 3, 24, ['#fffaf0', '#ffe9b0', '#e0b870']), 0, false);
+  [[520, 40, 60, 3], [580, 26, 50, 2.5]].forEach(([x, y, w, h]) => ell(x, y, w, h, 'rgba(14,10,46,.8)', 0, false));
   // the castle on its hill
-  const c = '#0a030a';
-  ctx.fillStyle = '#12050c'; ctx.beginPath(); ctx.moveTo(0, 82); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, 76 - Math.max(0, 14 - Math.abs(x - 320) / 12) - Math.sin(x / 37) * 1.5); ctx.lineTo(W, 82); ctx.fill();
+  const c = '#07051a';
+  ctx.fillStyle = '#0c0a2a'; ctx.beginPath(); ctx.moveTo(0, 82); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, 76 - Math.max(0, 14 - Math.abs(x - 320) / 12) - Math.sin(x / 37) * 1.5); ctx.lineTo(W, 82); ctx.fill();
   ctx.fillStyle = c;
   ctx.fillRect(262, 46, 116, 22);
   [[232, 36, 22], [386, 34, 22], [300, 28, 13], [334, 24, 15]].forEach(([x, top, w]) => {
@@ -721,9 +721,9 @@ function skyCastle(R) {
 }
 const BG = document.createElement('canvas'), VIG = document.createElement('canvas'), FOG = document.createElement('canvas');
 const GROUND = [
-  {g: ['#0e1a40', '#0a1230', '#050818'], blade: ['#16265a', '#0c1636'], path: ['#33406e', '#1f2648', '#141a36'], edge: 'rgba(150,180,255,.25)', peb: ['#3d4a80', '#0e1330'], pud: 'rgba(46,242,255,.18)'},
+  {g: ['#120c1e', '#0a0814', '#04030a'], blade: ['#1e1630', '#100c1c'], path: ['#2c2638', '#1c1828', '#120e1c'], edge: 'rgba(200,150,170,.2)', peb: ['#3a3048', '#0c0a12'], pud: 'rgba(255,60,60,.12)'},
   {g: ['#0a1c18', '#071412', '#030a08'], blade: ['#14362c', '#0a2018'], path: ['#3e3024', '#2a201a', '#1a1410'], edge: 'rgba(220,170,120,.22)', peb: ['#5a4632', '#120c08'], pud: 'rgba(125,255,58,.14)'},
-  {g: ['#1c1622', '#141018', '#0a080e']},
+  {g: ['#1a1838', '#121028', '#0a0818']},
 ];
 function buildScenery() {
   [BG, VIG].forEach(c => { c.width = cv.width; c.height = cv.height; });
@@ -1011,7 +1011,7 @@ function panel(x, y, w, h) {
   }
 }
 function titleText(s, x, y, size = 30) {
-  ctx.font = size + 'px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.font = '900 ' + size + 'px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = '#2a0e4a'; ctx.fillText(s, x + 2, y + 3);
   ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 12 * K;
   ctx.fillStyle = lg(0, y, 0, y + size, ['#fff6c8', C.gold, '#e0801a']); ctx.fillText(s, x, y);
@@ -1098,7 +1098,7 @@ function prepLevel() {
   G.spawned = 0; G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.lan = null; G.potion = null;
   G.boss = null; G.bossDone = false; G.bossFed = 0; G.bossPending = 1.6; G.bossIntro = 0; G.minionT = 0;
   if (G.st.stage === 1 || G.sel >= G.cList.length) G.sel = 0;
-  setTheme(G.st.wi);
+  setTheme(WORLDS[G.st.wi].theme);
 }
 function beginLevel() {
   G.rescued = false;
@@ -1388,7 +1388,7 @@ function submitName() {
   sfx.hiscore();
   goBoard();
 }
-function quitToHome() { G = null; titlePage = 0; Music.tempo = 108; Music.mode = 'normal'; setTheme(0); setScene('title'); }
+function quitToHome() { G = null; titlePage = 0; Music.tempo = 108; Music.mode = 'normal'; setTheme(WORLDS[0].theme); setScene('title'); }
 let codeBuf = '', cheatOn = false;
 // testing shortcut: start straight at level n with 5 lanterns; such runs never enter the records
 function startAt(n) {
@@ -1527,13 +1527,11 @@ function drawSkyLife() {
       if (Math.sin(T * 2.3 + i * 1.7) > 0) glowEye(x, y, .7, C.bile, 7);
     }
   } else {
-    // embers drifting up, and the odd flash of lightning behind the castle
-    for (let i = 0; i < 10; i++) {
-      const y = 330 - ((T * (12 + i % 4 * 4) + i * 61) % 250), x = 60 + (i * 89) % 480 + Math.sin(T + i) * 8;
-      glowEye(x, y, .6, i % 2 ? C.orange : '#ffd060', 5);
+    // golden sparkles floating up through the castle
+    for (let i = 0; i < 12; i++) {
+      const y = 330 - ((T * (10 + i % 4 * 4) + i * 61) % 250), x = 60 + (i * 89) % 480 + Math.sin(T + i) * 8;
+      twinkle(x, y, 1.2 + Math.max(0, Math.sin(T * 3 + i)) * 1.6, i % 2 ? C.gold : '#fff2c4', .8);
     }
-    const lt = T % 9;
-    if (lt < .1 || (lt > .22 && lt < .3)) { ctx.fillStyle = 'rgba(255,220,235,.22)'; ctx.fillRect(0, 0, W, 82); }
   }
   for (let i = 0; i < 6; i++) {
     const ex = 8 + (i * 13) % 34, ey = 100 + i * 41 + Math.sin(T * .5 + i) * 3;
@@ -1572,7 +1570,7 @@ function drawSkyLife() {
 function drawGraveGlow(i) {
   const gy = feetY(i), a = .18 + Math.sin(T * 2.2 + i) * .08;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = rg(20, gy - 6, 0, 22, [['rgba(185,140,255,', 'rgba(190,100,255,', 'rgba(255,70,40,'][THEME] + a + ')', 'rgba(0,0,0,0)']); ctx.fillRect(-2, gy - 30, 44, 34);
+  ctx.fillStyle = rg(20, gy - 6, 0, 22, [['rgba(255,60,60,', 'rgba(190,100,255,', 'rgba(255,190,90,'][THEME] + a + ')', 'rgba(0,0,0,0)']); ctx.fillRect(-2, gy - 30, 44, 34);
   ctx.restore();
 }
 function drawFog(i) {
@@ -1959,7 +1957,7 @@ function drawBossUI() {
 }
 const TITLE_CANDIES = Array.from({length: 16}, (_, i) => ({c: i % 8, x: 20 + ((i * 151) % 600), sp: 9 + (i * 7) % 11, ph: i * 1.7, s: .9 + (i % 3) * .35}));
 function bigTitle(s, cx, y, size) {
-  ctx.font = size + 'px ' + FONT.horror; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  ctx.font = '900 ' + size + 'px ' + FONT.horror; ctx.textBaseline = 'top'; ctx.textAlign = 'left';
   const ws = [...s].map(ch => ctx.measureText(ch).width), total = ws.reduce((a, b) => a + b, 0);
   let x = cx - total / 2;
   const pos = [...s].map((ch, i) => { const p = {ch, x, y: y + Math.sin(T * 2.2 + i * .7) * 2, w: ws[i]}; x += ws[i]; return p; });
@@ -2021,7 +2019,7 @@ function drawTitle() {
   // …and Léo stands his ground on the right
   drawLeoStage();
   // title
-  bigTitle('SORTILÈGES SUCRÉS', W / 2, 16, 50);
+  bigTitle('SORTILÈGES SUCRÉS', W / 2, 20, 43);
   txt('Les créatures sortent de l\'ombre. Aide Léo, l\'apprenti magicien,', W / 2, 78, C.bone, 'center', 12, 'ui', OUT, 500);
   txt('à découvrir quels bonbons elles aiment et lesquels elles détestent pour s\'en débarrasser.', W / 2, 92, C.bone, 'center', 12, 'ui', OUT, 500);
   // info panel with tabs
@@ -2084,9 +2082,9 @@ function drawIntro() {
       const two = newSp.length > 1, sc = two ? 1.3 : 1.55;
       txt(two ? 'NOUVELLES CRÉATURES' : 'NOUVELLE CRÉATURE', colX[0], y, C.blood, 'center', 12, 'ui', null);
       newSp.forEach((sp, i) => {
-        const cx = colX[0] + (two ? (i ? 32 : -32) : 0);
+        const cx = colX[0] + (two ? (i ? 36 : -36) : 0);
         ctx.save(); ctx.translate(cx, y + 80); ctx.scale(sc, sc); sp.draw(T * 6, {seed: 1 + i}); ctx.restore();
-        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 15 : 18, 'horror');
+        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 12 : 16, 'horror');
       });
     }
     if (newC.length) {
@@ -2146,7 +2144,7 @@ function drawGrimoire() {
 function drawOver() {
   ctx.fillStyle = 'rgba(2,3,10,.65)'; ctx.fillRect(0, 0, W, 330);
   panel(140, 62, 360, 236);
-  ctx.font = '34px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.font = '900 30px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.save(); ctx.shadowColor = C.blood; ctx.shadowBlur = 14 * K; ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112); ctx.restore();
   txt('Score  ' + pad(G.score, 6) + '      Monde ' + fmtLevel(G.level), W / 2, 154, C.bone, 'center', 14);
   if (G.qualifies) {
@@ -2179,7 +2177,7 @@ function render() {
     drawBossUI();
     if (G && G.inForest) drawForestUI();
     if (scene === 'forestIntro') drawForestIntro();
-    if (scene === 'forestWin') { titleText('Léo est libre!', W / 2, 120, 34); txt('Le Gardien dort. Retour au ' + WORLDS[G.st.wi].name.toLowerCase() + '!', W / 2, 166, C.bone, 'center', 15); }
+    if (scene === 'forestWin') { titleText('Léo est libre!', W / 2, 120, 34); txt('Le Gardien dort. Retour vers ' + WORLDS[G.st.wi].name.toLowerCase() + '!', W / 2, 166, C.bone, 'center', 15); }
     if (scene === 'pause') drawGrimoire();
     if (scene === 'over') drawOver();
     if (scene === 'board') drawBoardScene();
@@ -2205,7 +2203,7 @@ function proceed() {
   else if (scene === 'forestIntro') setScene('forest');
   else if (scene === 'pause') setScene('play');
   else if (scene === 'over') { if (G.qualifies) submitName(); else goBoard(); }
-  else if (scene === 'board') { G = null; setTheme(0); setScene('title'); titlePage = 1; }
+  else if (scene === 'board') { G = null; setTheme(WORLDS[0].theme); setScene('title'); titlePage = 1; }
 }
 function moveLane(d) { if (G.stun > 0) return; G.lane = Math.max(0, Math.min(NL - 1, G.lane + d)); }
 function selectCandy(i) {
@@ -2319,12 +2317,12 @@ if (window.ResizeObserver) new ResizeObserver(refit).observe(document.documentEl
 let started = false;
 const start = () => { if (started) return; started = true; fit(); try { cv.focus({preventScroll: true}); } catch (e) {} requestAnimationFrame(t => { last = t; frame(t); }); };
 const fontsReady = document.fonts && document.fonts.load
-  ? Promise.all([document.fonts.load('16px "Mystery Quest"'), document.fonts.load('700 12px "Barlow Condensed"'), document.fonts.load('500 12px "Barlow Condensed"')]).catch(() => {})
+  ? Promise.all([document.fonts.load('900 16px "Cinzel Decorative"'), document.fonts.load('700 16px "Cinzel Decorative"'), document.fonts.load('700 12px "Barlow Condensed"'), document.fonts.load('500 12px "Barlow Condensed"')]).catch(() => {})
   : Promise.resolve();
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261104-2243';
+const VERSION = '20261104-2347';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

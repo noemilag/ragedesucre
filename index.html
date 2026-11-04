@@ -30,9 +30,14 @@ html,body{height:100%}
 body{margin:0;background:var(--void);color:var(--bone);overflow:hidden;display:grid;place-items:center;font-family:var(--font-ui)}
 canvas{display:block;cursor:pointer;outline:none;touch-action:none}
 canvas:focus-visible{outline:2px solid var(--toxic)}
+#maj{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;
+  font:700 17px var(--font-ui);letter-spacing:.02em;color:#1a0a00;background:linear-gradient(#ffc070,#ff8a1f);
+  border:2px solid #ffe0a8;border-radius:999px;padding:10px 22px;box-shadow:0 0 18px rgba(255,138,31,.6),0 4px 12px rgba(0,0,0,.6);cursor:pointer}
+#maj:focus-visible{outline:3px solid var(--bone);outline-offset:3px}
 </style>
 </head>
 <body>
+<button id="maj" type="button" hidden>✨ Nouvelle version — Mettre à jour</button>
 <canvas id="g" tabindex="0" aria-label="Jeu Rage de sucre : flèches pour changer de sentier, espace pour lancer un bonbon"></canvas>
 
 <script>
@@ -847,6 +852,8 @@ const sfx = {
   roar: () => { tone(90, 38, .9, 'sawtooth', .14); noise(.8, .16, 'lowpass', 700, 90); },
   bossThrow: () => { noise(.2, .2, 'bandpass', 400, 1800); tone(300, 600, .15, 'sawtooth', .05); },
   bonk: () => { tone(900, 300, .12, 'square', .08); tone(1400, 1200, .5, 'sine', .06, .1); tone(1900, 1700, .5, 'sine', .04, .2); noise(.08, .2, 'lowpass', 2000, 400); },
+  bonusIn: () => [84, 88, 91].forEach((m, i) => tone(mf(m), mf(m), .18, 'sine', .05, i * .07)),
+  extraLife: () => { [72, 76, 79, 84, 88, 91, 96].forEach((m, i) => tone(mf(m), mf(m), .12, 'triangle', .06, i * .05)); tone(mf(96), mf(96), .6, 'sine', .05, .35); },
   thud: () => { tone(90, 38, .3, 'sine', .32); noise(.25, .14, 'lowpass', 300, 70); },
   bossIn: () => {
     tone(55, 38, 2.6, 'sine', .4); tone(110, 52, 2.2, 'sawtooth', .1); noise(1.8, .22, 'lowpass', 500, 50);
@@ -975,6 +982,7 @@ async function saveRun(run) {
 }
 
 /* ---------- UI pieces ---------- */
+const SPAWN_X_BONUS = 40;
 const pad = (n, k) => String(Math.max(0, n)).padStart(k, '0');
 function blink() { return Math.floor(T * 2.2) % 2 === 0; }
 function panel(x, y, w, h) {
@@ -1068,7 +1076,7 @@ const levelTempo = () => 108 + Math.min(G.level - 1, 10) * 2;
 function newGame() {
   G = {level: 1, score: 0, lives: 3, sel: 0, lane: 1, py: feetY(1), mons: [], candies: [], parts: [], texts: [],
        known: {}, spawned: 0, spawnT: 1, cool: 0, throwT: 0, shake: 0, lostT: 0, bonus: 0, extraLife: false, victory: false,
-       name: '', qualifies: false, run: null, taken: false};
+       name: '', qualifies: false, run: null, taken: false, lanternT: 30, potionT: 50, lan: null, potion: null};
   prepLevel();
   Music.mode = 'normal';
   setScene('intro');
@@ -1079,7 +1087,7 @@ function prepLevel() {
   const L = worldLists(G.level);
   G.st = stageOf(G.level); G.cfg = lvlCfg(G.level);
   G.spList = L.sp; G.cList = L.c; G.newSp = L.newSp; G.newC = L.newC;
-  G.spawned = 0; G.mons = []; G.candies = []; G.shots = []; G.stun = 0;
+  G.spawned = 0; G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.lan = null; G.potion = null;
   G.boss = null; G.bossDone = false; G.bossFed = 0; G.bossPending = 1.6; G.bossIntro = 0; G.minionT = 0;
   if (G.st.stage === 1 || G.sel >= G.cList.length) G.sel = 0;
   setTheme(G.st.wi);
@@ -1291,8 +1299,44 @@ function leaveForest() {
   prepLevel(); Music.mode = 'normal';
   setScene('intro'); sfx.level();
 }
+const potionDelay = () => G.lives === 1 ? 10 + Math.random() * 6 : 55 + Math.random() * 30;
+// extra lives: the floating lantern (hit it with a candy) and the orange potion (step onto its path)
+function gainLife(x, y) {
+  const full = G.lives >= 5;
+  if (full) G.score += 300; else G.lives++;
+  addText(full ? '+300' : '+1 LANTERNE!', x, y - 16, C.bile, 1.6);
+  for (let i = 0; i < 18; i++) G.parts.push({x, y, vx: (Math.random() - .5) * 120, vy: -40 - Math.random() * 70, g: 60, life: .9, max: .9, col: i % 2 ? C.orange : '#ffe070', w: 2, h: 2, kind: 'dot', rot: 0});
+  sfx.extraLife();
+  G.lifeFlash = 1.2;
+  // back above one lantern: the potion goes back to being rare
+  if (G.lives > 1 && G.potionT < 25) G.potionT = potionDelay();
+}
+function updateBonus(dt) {
+  if (G.lives < 5) {
+    if (!G.lan && (G.lanternT -= dt) <= 0) {
+      G.lan = {lane: (Math.random() * NL) | 0, x: SPAWN_X_BONUS, t: 0};
+      G.lanternT = 40 + Math.random() * 25;
+      sfx.bonusIn();
+    }
+    if (!G.potion && (G.potionT -= dt) <= 0) {
+      const lanes = [0, 1, 2, 3].filter(l => l !== G.lane);
+      G.potion = {lane: lanes[(Math.random() * lanes.length) | 0], t: 6, max: 6};
+      G.potionT = potionDelay();
+      sfx.bonusIn();
+    }
+  }
+  if (G.lan) {
+    G.lan.t += dt; G.lan.x += 34 * dt;
+    if (G.lan.x > PATH_X1 - 30) G.lan = null;
+  }
+  if (G.potion) {
+    if (G.lane === G.potion.lane && !(G.stun > 0)) { gainLife(PATH_X1 - 22, feetY(G.potion.lane) - 14); G.potion = null; }
+    else if ((G.potion.t -= dt) <= 0) { burst(10, PATH_X1 - 22, feetY(G.potion.lane) - 12, C.orange, {vy: -30, spread: 40, g: -20, life: .6}); G.potion = null; }
+  }
+}
 function loseLife(m) {
   G.lives--;
+  if (G.lives === 1) G.potionT = Math.min(G.potionT, 6);
   if (G.lives <= 0) { startCaught(m); return; }
   G.lostT = 2.2; G.lostMon = m; setScene('lost'); G.shake = .5;
   addText('OH NON!', PX - 10, laneTop(m.lane) + 2, C.blood, 2);
@@ -1313,7 +1357,7 @@ function afterLost() {
   G.spawned -= G.mons.filter(m => m.state !== 'leave' && !m.extra).length;
   // an unfed boss comes back out of its hole, still remembering what it already ate
   if (G.boss && !G.bossDone) { G.boss = null; G.bossPending = 1.6; G.bossIntro = 0; }
-  G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.spawnT = 1.4;
+  G.mons = []; G.candies = []; G.shots = []; G.stun = 0; G.spawnT = 1.4; G.lan = null; G.potion = null;
   setScene('play');
 }
 function levelComplete() {
@@ -1383,6 +1427,7 @@ function update(dt) {
 
   G.cool -= dt; G.throwT -= dt; G.bossIntro -= dt;
   if (G.spawned < G.cfg.total) { G.spawnT -= dt; if (G.spawnT <= 0) spawn(); }
+  updateBonus(dt); G.lifeFlash = Math.max(0, (G.lifeFlash || 0) - dt);
   // while the boss is out, smaller monsters keep crawling out to help it
   if (G.boss && !G.bossDone && G.boss.rise <= 0 && (G.minionT -= dt) <= 0) {
     G.minionT = Math.max(3, 6.5 - G.st.cycle);
@@ -1391,6 +1436,7 @@ function update(dt) {
 
   for (const c of G.candies) {
     c.x -= 260 * dt; c.t += dt;
+    if (G.lan && G.lan.lane === c.lane && Math.abs(c.x - G.lan.x) < 11) { gainLife(G.lan.x, feetY(c.lane) - 26); G.lan = null; c.dead = true; continue; }
     let target = null;
     for (const m of G.mons) {
       if (m.lane !== c.lane || m.state === 'leave' || m.hop > .25) continue;
@@ -1677,6 +1723,38 @@ function drawHero() {
   }
   ctx.restore();
 }
+// the magic lantern drifts along a path toward Léo, on little bat-like wings
+function drawFloatingLantern(l, i) {
+  const x = l.x, y = feetY(i) - 26 + Math.sin(l.t * 3) * 3, fade = Math.min(1, (PATH_X1 - 30 - x) / 40);
+  ctx.save(); ctx.globalAlpha = Math.max(0, fade);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rg(x, y, 0, 26, ['rgba(255,190,80,.5)', 'rgba(255,120,30,0)']); ctx.fillRect(x - 26, y - 26, 52, 52);
+  ctx.restore();
+  const f = Math.sin(l.t * 14) * 3;
+  poly([x - 3, y - 2, x - 11, y - 6 - f, x - 9, y + 1, x - 4, y + 2], '#2a1a4a');
+  poly([x + 3, y - 2, x + 11, y - 6 - f, x + 9, y + 1, x + 4, y + 2], '#2a1a4a');
+  ctx.save(); ctx.translate(x, y); ctx.scale(1.7, 1.7); lantern(0, 0, true); ctx.restore();
+  for (let k = 0; k < 3; k++) glowEye(x - 8 - k * 6, y + 4 + Math.sin(l.t * 6 + k) * 2, .7, k % 2 ? C.orange : '#ffe070', 5);
+  ctx.restore();
+}
+// the orange life potion waits at the end of a path; a ring shows how long before it evaporates
+function drawPotion(pt, i) {
+  const x = PATH_X1 - 22, y = feetY(i) - 13 + Math.sin(T * 4) * 1.5, left = pt.t / pt.max;
+  if (left < .3 && Math.floor(T * 10) % 2) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = rg(x, y, 0, 24, ['rgba(255,140,30,.55)', 'rgba(255,140,30,0)']); ctx.fillRect(x - 24, y - 24, 48, 48);
+  ctx.restore();
+  ell(x, feetY(i), 7, 1.8, 'rgba(0,0,6,.5)', 0, false);
+  rrect(x - 1.8, y - 11, 3.6, 5, .6); sh('#d8e0f0', .7);
+  rrect(x - 2.2, y - 13, 4.4, 2.4, .6); sh('#8a5428', .6);
+  ell(x, y, 6.5, 6.5, 'rgba(220,235,255,.35)');
+  ctx.save(); ctx.beginPath(); ctx.arc(x, y, 5.6, 0, TAU); ctx.clip();
+  ctx.fillStyle = rg(x - 1.5, y, .5, 7, ['#ffd080', C.orange, '#c04a00']); ctx.fillRect(x - 7, y - 2 + Math.sin(T * 5) * .6, 14, 10);
+  ctx.restore();
+  ell(x - 2.4, y - 2.4, 1.3, .9, 'rgba(255,255,255,.75)', -.5, false);
+  for (let k = 0; k < 2; k++) glowEye(x - 2 + k * 4, y + 2 - ((T * 6 + k * 3) % 8), .5, '#fff2b0', 4);
+  ctx.beginPath(); ctx.arc(x, y, 10, -Math.PI / 2, -Math.PI / 2 + TAU * left); ctx.strokeStyle = C.orange; ctx.lineWidth = 1.4; ctx.stroke();
+}
 function drawWorld() {
   ctx.save();
   if (G && G.shake > 0) ctx.translate((Math.random() - .5) * 5, (Math.random() - .5) * 4);
@@ -1708,6 +1786,8 @@ function drawWorld() {
         for (let k = 1; k <= 4; k++) glowEye(c.x + k * 5, cy + Math.sin(c.t * 20 + k) * 2, .9 - k * .15, k % 2 ? C.orange : '#ffe070', 5);
         drawCandy(c.c, c.x, cy, 1.05, -c.t * 12);
       }
+      if (G.lan && G.lan.lane === i) drawFloatingLantern(G.lan, i);
+      if (G.potion && G.potion.lane === i) drawPotion(G.potion, i);
       for (const s of G.shots) {
         if (s.lane !== i) continue;
         const cy = feetY(i) - 14 - Math.abs(Math.sin(s.t * 7)) * 6;
@@ -1783,7 +1863,10 @@ function drawHUD() {
   if (G.cfg.boss && G.spawned >= G.cfg.total && !left) txt('BOSS', 168, 2, C.blood, 'left', 13); else txt(String(left), 168, 2, C.acid, 'left', 13);
   txt('Monde ' + fmtLevel(G.level), W / 2 + 10, 0, C.toxic, 'center', 16, 'horror');
   txt('RECORD ' + pad(Math.max(topScore(), G.score), 6), 532, 3, C.dim, 'right', 11);
-  for (let i = 0; i < 5; i++) if (i < Math.max(3, G.lives)) lantern(556 + i * 17, 8, i < G.lives);
+  for (let i = 0; i < 5; i++) if (i < Math.max(3, G.lives)) {
+    if (G.lifeFlash > 0 && i === G.lives - 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = rg(556 + i * 17, 9, 0, 16, ['rgba(255,200,90,' + G.lifeFlash * .6 + ')', 'rgba(0,0,0,0)']); ctx.fillRect(540 + i * 17, -8, 32, 34); ctx.restore(); }
+    lantern(556 + i * 17, 8, i < G.lives);
+  }
   drawBar(true);
 }
 function drawBoard(x, y, w, highlight, limit = 10, rowH = 15) {
@@ -2223,6 +2306,26 @@ const fontsReady = document.fonts && document.fonts.load
   ? Promise.all([document.fonts.load('16px "Creepster"'), document.fonts.load('700 12px "Barlow Condensed"'), document.fonts.load('500 12px "Barlow Condensed"')]).catch(() => {})
   : Promise.resolve();
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
+
+/* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
+const VERSION = '20261104-2232';
+(() => {
+  const btn = document.getElementById('maj');
+  let latest = null;
+  async function check() {
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), {cache: 'no-store'});
+      if (!r.ok) return;
+      const v = (await r.json()).version;
+      if (v && v !== VERSION) { latest = v; btn.hidden = false; }
+    } catch (e) {}
+  }
+  // a new address skips whatever copy of the page the phone kept
+  btn.addEventListener('click', () => { location.replace(location.pathname + '?v=' + encodeURIComponent(latest || Date.now())); });
+  check();
+  setInterval(check, 120000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
 })();
 </script>
 </body>

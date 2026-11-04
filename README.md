@@ -1,6 +1,6 @@
-# Rage de sucre
+# Sortilèges sucrés
 
-Un jeu d'arcade inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, l'apprenti magicien. Aide-le à leur lancer des bonbons avec sa baguette magique : chaque créature a ses favoris… et ceux qu'elle déteste.
+Un jeu d'arcade magique inspiré de *Tapper*, dans un cimetière la nuit. Des monstres sortent de leurs tombes et avancent sur quatre sentiers vers **Léo**, l'apprenti magicien. Aide-le à leur lancer des bonbons avec sa baguette magique : chaque créature a ses favoris… et ceux qu'elle déteste.
 
 - Un monstre qui **aime** son bonbon le dévore et retourne dans sa tombe.
 - S'il le **déteste**, il enrage et accélère.

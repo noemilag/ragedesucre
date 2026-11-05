@@ -1796,7 +1796,7 @@ function drawWorld() {
         ctx.fillStyle = rg(c.x, cy, 0, 12, ['rgba(232,255,58,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, cy - 12, 24, 24);
         ctx.restore();
         for (let k = 1; k <= 4; k++) glowEye(c.x + k * 5, cy + Math.sin(c.t * 20 + k) * 2, .9 - k * .15, k % 2 ? C.orange : '#ffe070', 5);
-        drawCandy(c.c, c.x, cy, 1.25, -c.t * 12);
+        drawCandy(c.c, c.x, cy, 1.5, -c.t * 12);
       }
       if (G.lan && G.lan.lane === i) drawFloatingLantern(G.lan, i);
       if (G.potion && G.potion.lane === i) drawPotion(G.potion, i);
@@ -1845,23 +1845,24 @@ function drawWorld() {
 }
 
 /* ---------- Render: interface ---------- */
+const SLOT = 34;
 function drawBar(withCandies) {
   ctx.fillStyle = lg(0, 330, 0, 360, ['rgba(3,5,12,.85)', 'rgba(3,5,12,.98)']); ctx.fillRect(0, 330, W, 30);
   line(0, 331, W, 331, 'rgba(255,194,74,.5)', .8);
   if (withCandies) {
     const n = G.cList.length;
     for (let i = 0; i < n; i++) {
-      const x = 8 + i * 30, y = 336, on = i === G.sel;
+      const x = 6 + i * SLOT, y = 332.5, on = i === G.sel;
       ctx.save();
       if (on) { ctx.shadowColor = C.gold; ctx.shadowBlur = 8 * K; }
-      rrect(x, y, 26, 21, 4); ctx.fillStyle = on ? 'rgba(255,194,74,.16)' : 'rgba(30,24,70,.6)'; ctx.fill();
+      rrect(x, y, SLOT - 3, 26, 4); ctx.fillStyle = on ? 'rgba(255,194,74,.16)' : 'rgba(30,24,70,.6)'; ctx.fill();
       ctx.strokeStyle = on ? C.gold : C.mute; ctx.lineWidth = on ? 1.4 : .8; ctx.stroke();
       ctx.restore();
-      drawCandy(G.cList[i], x + 13, y + 10.5, 1.15);
+      drawCandy(G.cList[i], x + (SLOT - 3) / 2, y + 13.5, 1.5);
       txt(String(i + 1), x + 3, y + 1, on ? C.bile : C.mute, 'left', 7, 'ui', null);
     }
     const cs = CANDIES[G.cList[G.sel]];
-    txt(cs.name, 8 + n * 30 + 8, 340, cs.col, 'left', n > 7 ? 11 : 13);
+    txt(cs.name, 6 + n * SLOT + 6, 340, cs.col, 'left', n > 7 ? 11 : 13);
     toggleBtn(BTN.book, true, 'book', '');
   }
   toggleBtn(BTN.music, prefs.music, 'music', 'M');
@@ -2265,8 +2266,8 @@ cv.addEventListener('pointerdown', e => {
     if (x >= BTN.sfx && x < BTN.sfx + 30) { toggleSfx(); return; }
     if (scene === 'play' || scene === 'forest') {
       if (scene === 'play' && x >= BTN.book && x < BTN.book + 30) { setScene('pause'); return; }
-      const i = Math.floor((x - 8) / 30);
-      if (x >= 8 && i < G.cList.length) selectCandy(i);
+      const i = Math.floor((x - 6) / SLOT);
+      if (x >= 6 && i < G.cList.length) selectCandy(i);
     }
     return;
   }
@@ -2308,13 +2309,13 @@ function fit() {
   let ah = vh, aw = vw;
   if (turned) {
     const z = getComputedStyle(document.getElementById('zone')), px = k => parseFloat(z[k]) || 0;
-    const top = Math.max(px('paddingTop'), 20) + 6, bot = Math.max(px('paddingBottom'), 0) + 10, lft = px('paddingLeft'), rgt = px('paddingRight');
+    const top = Math.max(px('paddingTop'), 47) + 8, bot = Math.max(px('paddingBottom'), 21) + 6, lft = px('paddingLeft'), rgt = px('paddingRight');
     ah = vh - top - bot; aw = vw - lft - rgt;
     document.body.style.setProperty('--cy', (top + ah / 2) + 'px'); document.body.style.setProperty('--cx', (lft + aw / 2) + 'px');
   }
   const s = turned ? Math.max(.2, Math.min(ah / W, aw / H)) : Math.max(.2, Math.min(vw / W, vh / H));
   const cssW = Math.max(64, Math.floor(W * s)), cssH = Math.max(36, Math.floor(H * s));
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
   cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
   cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
   K = cv.width / W;
@@ -2332,7 +2333,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261104-2351';
+const VERSION = '20261105-0004';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

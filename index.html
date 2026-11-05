@@ -88,11 +88,16 @@ function limb(x1, y1, x2, y2, w, col, outline = true) {
 }
 function line(x1, y1, x2, y2, col, w = 1) { ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke(); }
 function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
-const blurPx = n => Math.min(n * K, 28);
+// canvas shadows are switched off: iPhone browsers draw blurred shadows as displaced ghost copies
+const blurPx = () => 0;
+// a glowing dot: soft halo drawn with a radial gradient, then the dot itself
 function glowEye(x, y, r, col, blur = 6) {
-  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blurPx(blur);
-  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = col; ctx.fill();
+  const R = r + blur * .9;
+  ctx.save(); ctx.globalAlpha *= .55;
+  const g = ctx.createRadialGradient(x, y, r * .5, x, y, R); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.fill();
   ctx.restore();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = col; ctx.fill();
 }
 function lg(x0, y0, x1, y1, stops) { const g = ctx.createLinearGradient(x0, y0, x1, y1); stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c)); return g; }
 function rg(x, y, r0, r1, stops) { const g = ctx.createRadialGradient(x, y, r0, x, y, r1); stops.forEach((c, i) => g.addColorStop(i / (stops.length - 1), c)); return g; }
@@ -2341,7 +2346,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0026';
+const VERSION = '20261105-0029';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

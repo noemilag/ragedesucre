@@ -1835,8 +1835,8 @@ function drawWorld() {
     ctx.globalAlpha = 1;
     for (const t of G.texts) {
       ctx.globalAlpha = Math.min(1, t.life / t.max * 2);
-      const size = t.font === 'horror' ? 15 : 11, half = textW(t.s, size, t.font) / 2;
-      txt(t.s, Math.max(4 + half, Math.min(W - 4 - half, t.x)), t.y, t.col, 'center', size, t.font);
+      const size = t.font === 'horror' ? 16 : 11, half = textW(t.s, size, 'ui') / 2;
+      txt(t.s, Math.max(4 + half, Math.min(W - 4 - half, t.x)), t.y, t.col, 'center', size, 'ui');
     }
     ctx.globalAlpha = 1;
   }
@@ -2333,7 +2333,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0004';
+const VERSION = '20261105-0007';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

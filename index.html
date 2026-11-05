@@ -2098,8 +2098,10 @@ function drawIntro() {
       txt(two ? 'NOUVELLES CRÉATURES' : 'NOUVELLE CRÉATURE', colX[0], y, C.blood, 'center', 12, 'ui', null);
       newSp.forEach((sp, i) => {
         const cx = colX[0] + (two ? (i ? 36 : -36) : 0);
-        ctx.save(); ctx.translate(cx, y + 80); ctx.scale(sc, sc); sp.draw(T * 6, {seed: 1 + i}); ctx.restore();
-        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 15 : 17, 'ui');
+        // the ghost floats above its feet line, so it sits lower and a bit smaller to stay clear of the heading
+        const floaty = sp.id === 'ghost', gs = floaty ? sc * .85 : sc;
+        ctx.save(); ctx.translate(cx, y + (floaty ? 87 : 80)); ctx.scale(gs, gs); sp.draw(T * 6, {seed: 1 + i}); ctx.restore();
+        txt(sp.name, cx, y + (floaty ? 86 : 84), sp.col, 'center', two ? 15 : 17, 'ui');
       });
     }
     if (newC.length) {
@@ -2346,7 +2348,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0049';
+const VERSION = '20261105-0105';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

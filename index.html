@@ -1013,12 +1013,17 @@ function panel(x, y, w, h) {
     twinkle(dx, y, 2 + tw * 3, i % 2 ? C.gold : '#fff2c4', .4 + tw * .6);
   }
 }
+// soft glow behind a word, drawn as wide faint strokes: canvas text shadows show up as a displaced ghost copy on iPhone
+function textHalo(s, x, y, size, rgb) {
+  ctx.save(); ctx.lineJoin = 'round';
+  [[.5, .05], [.32, .08], [.18, .12]].forEach(([w, a]) => { ctx.lineWidth = size * w; ctx.strokeStyle = 'rgba(' + rgb + ',' + a + ')'; ctx.strokeText(s, x, y); });
+  ctx.restore();
+}
 function titleText(s, x, y, size = 30) {
   ctx.font = '900 ' + size + 'px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = '#2a0e4a'; ctx.fillText(s, x + 2, y + 3);
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(12);
+  textHalo(s, x, y, size, '255,138,31');
   ctx.fillStyle = lg(0, y, 0, y + size, ['#fff6c8', C.gold, '#e0801a']); ctx.fillText(s, x, y);
-  ctx.restore();
 }
 function lantern(x, y, on) {
   if (on) {
@@ -1971,7 +1976,8 @@ function bigTitle(s, cx, y, size) {
   ctx.restore();
   pos.forEach(p => { ctx.lineJoin = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = size * .14; ctx.strokeText(p.ch, p.x, p.y); });
   pos.forEach(p => { ctx.fillStyle = '#3a1060'; ctx.fillText(p.ch, p.x + size * .04, p.y + size * .06); });
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(16);
+  pos.forEach(p => textHalo(p.ch, p.x, p.y, size, '255,138,31'));
+  ctx.save();
   pos.forEach(p => { ctx.fillStyle = lg(0, p.y, 0, p.y + size * .9, ['#fffbe0', '#ffd96a', C.gold, '#e07a1a']); ctx.fillText(p.ch, p.x, p.y); });
   ctx.restore();
   // sparkles that wink on and off around the letters
@@ -2149,7 +2155,8 @@ function drawOver() {
   ctx.fillStyle = 'rgba(2,3,10,.65)'; ctx.fillRect(0, 0, W, 330);
   panel(140, 62, 360, 236);
   ctx.font = '900 30px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.save(); ctx.shadowColor = C.blood; ctx.shadowBlur = blurPx(14); ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112); ctx.restore();
+  textHalo('Le festin', W / 2, 78, 30, '255,34,64'); textHalo('est terminé', W / 2, 112, 30, '255,34,64');
+  ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112);
   txt('Score  ' + pad(G.score, 6) + '      Monde ' + fmtLevel(G.level), W / 2, 154, C.bone, 'center', 14);
   if (G.qualifies) {
     txt('NOUVEAU RECORD! Écris ton nom :', W / 2, 178, C.gold, 'center', 13);
@@ -2334,7 +2341,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0018';
+const VERSION = '20261105-0026';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

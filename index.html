@@ -88,8 +88,9 @@ function limb(x1, y1, x2, y2, w, col, outline = true) {
 }
 function line(x1, y1, x2, y2, col, w = 1) { ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke(); }
 function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+const blurPx = n => Math.min(n * K, 28);
 function glowEye(x, y, r, col, blur = 6) {
-  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blur * K;
+  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blurPx(blur);
   ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = col; ctx.fill();
   ctx.restore();
 }
@@ -288,7 +289,7 @@ function drawGhost(p, o) {
   ctx.beginPath(); ctx.moveTo(-11, -28); ctx.arc(0, -28, 11, Math.PI, 0); ctx.lineTo(11, -5);
   for (let i = 11, k = 0; i > -11; i -= 5.5, k++) ctx.quadraticCurveTo(i - 2.75, -5 + (k % 2 ? -2 : 5) + Math.sin(T * 6 + i) * 1.5, i - 5.5, -5);
   ctx.closePath();
-  ctx.save(); ctx.globalAlpha = .9; ctx.shadowColor = red ? C.blood : C.acid; ctx.shadowBlur = 14 * K;
+  ctx.save(); ctx.globalAlpha = .9; ctx.shadowColor = red ? C.blood : C.acid; ctx.shadowBlur = blurPx(14);
   ctx.fillStyle = rg(-3, -30, 2, 24, [c1, c2]); ctx.fill(); ctx.restore();
   ctx.lineWidth = .8; ctx.strokeStyle = 'rgba(2,3,10,.55)'; ctx.stroke();
   ell(-2.5, -30, 2.2, 3.6, OUT, 0, false); ell(4.5, -30, 2.2, 3.6, OUT, 0, false);
@@ -467,7 +468,7 @@ function drawPumpkinKing(p, o) {
   ell(3, -73, 13.5, 11.5, rg(-2, -78, 2, 16, ['#ffc060', '#ff8a1f', '#a84000']));
   ctx.strokeStyle = 'rgba(140,50,0,.6)'; ctx.lineWidth = .8;
   [5.5, 10].forEach(rx => { ctx.beginPath(); ctx.ellipse(3, -73, rx, 11.3, 0, 0, TAU); ctx.stroke(); });
-  ctx.save(); ctx.shadowColor = '#ffb020'; ctx.shadowBlur = 10 * K * flick;
+  ctx.save(); ctx.shadowColor = '#ffb020'; ctx.shadowBlur = blurPx(10 * flick);
   poly([4, -79, 8, -75, 2, -74.5], '#fff070', false); poly([10, -79, 14, -75, 9, -74.6], '#fff070', false);
   poly([0, -69, 15, -69.5, 13.5, -65, 11, -66.6, 9, -63.8, 7, -66.4, 4.5, -64, 2, -66.6], '#fff070', false);
   ctx.restore();
@@ -676,7 +677,7 @@ function skyCemetery(R) {
   ctx.fillRect(190, 46, 40, 30); ctx.fillRect(204, 26, 12, 22);
   poly([202, 27, 210, 8, 218, 27], '#03060f', false); poly([186, 47, 210, 34, 234, 47], '#03060f', false);
   ctx.fillRect(209, 2, 2, 8); ctx.fillRect(206, 4.5, 8, 2);
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 6 * K; ctx.fillStyle = '#ff7a1a';
+  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(6); ctx.fillStyle = '#ff7a1a';
   [[196, 56], [222, 56], [208, 34]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, b + 8); ctx.lineTo(a, b + 2); ctx.arc(a + 2, b + 2, 2, Math.PI, 0); ctx.lineTo(a + 4, b + 8); ctx.fill(); });
   ctx.restore();
   for (let x = 0; x < W; x += 6) { ctx.fillStyle = '#02040c'; ctx.fillRect(x, 70, 1.2, 10); poly([x - .6, 70, x + .6, 66.5, x + 1.8, 70], '#02040c', false); }
@@ -716,7 +717,7 @@ function skyCastle(R) {
     poly([x - 2, top - 3, x + w / 2, top - 3 - w * .75, x + w + 2, top - 3], c, false);
   });
   for (let k = 262; k < 378; k += 6) ctx.fillRect(k, 43, 4, 3);
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 6 * K; ctx.fillStyle = '#ffb030';
+  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(6); ctx.fillStyle = '#ffb030';
   [[241, 42], [395, 40], [305, 34], [340, 31], [282, 52], [300, 54], [350, 52], [366, 54], [241, 54], [395, 54]].forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a, b + 6); ctx.lineTo(a, b + 1.6); ctx.arc(a + 1.6, b + 1.6, 1.6, Math.PI, 0); ctx.lineTo(a + 3.2, b + 6); ctx.fill(); });
   ctx.restore();
   ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(308, 68); ctx.lineTo(308, 61); ctx.arc(320, 61, 12, Math.PI, 0); ctx.lineTo(332, 68); ctx.fill();
@@ -997,10 +998,10 @@ function twinkle(x, y, r, col, a = 1) {
 }
 function panel(x, y, w, h) {
   ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 20 * K;
+  ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = blurPx(20);
   rrect(x, y, w, h, 10); ctx.fillStyle = lg(0, y, 0, y + h, ['rgba(40,24,86,.96)', 'rgba(12,10,36,.97)']); ctx.fill();
   ctx.restore();
-  ctx.save(); ctx.shadowColor = C.gold; ctx.shadowBlur = 8 * K;
+  ctx.save(); ctx.shadowColor = C.gold; ctx.shadowBlur = blurPx(8);
   rrect(x, y, w, h, 10); ctx.strokeStyle = lg(0, y, 0, y + h, ['#ffe7a0', C.gold, '#c07a1a']); ctx.lineWidth = 1.6; ctx.stroke();
   ctx.restore();
   rrect(x + 4, y + 4, w - 8, h - 8, 7); ctx.strokeStyle = 'rgba(255,194,74,.22)'; ctx.lineWidth = 1; ctx.stroke();
@@ -1015,7 +1016,7 @@ function panel(x, y, w, h) {
 function titleText(s, x, y, size = 30) {
   ctx.font = '900 ' + size + 'px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = '#2a0e4a'; ctx.fillText(s, x + 2, y + 3);
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 12 * K;
+  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(12);
   ctx.fillStyle = lg(0, y, 0, y + size, ['#fff6c8', C.gold, '#e0801a']); ctx.fillText(s, x, y);
   ctx.restore();
 }
@@ -1060,7 +1061,7 @@ const inBox = (b, x = MX, y = MY) => x >= b[0] && x <= b[0] + b[2] && y >= b[1] 
 function button(b, label, col) {
   const hov = inBox(b);
   ctx.save();
-  if (hov) { ctx.shadowColor = col; ctx.shadowBlur = 10 * K; }
+  if (hov) { ctx.shadowColor = col; ctx.shadowBlur = blurPx(10); }
   rrect(b[0], b[1], b[2], b[3], 5); ctx.fillStyle = hov ? col : 'rgba(5,9,24,.9)'; ctx.fill();
   ctx.restore();
   rrect(b[0], b[1], b[2], b[3], 5); ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.stroke();
@@ -1269,7 +1270,7 @@ function forestHit(m, cid) {
     sfx.munch();
     if (m.fed >= m.need) {
       m.state = 'sleep'; G.forestT = 3.2; setScene('forestWin');
-      addText('ZZZ...', cx, top - 10, C.acid, 3, 'horror');
+      addText('ZZZ...', cx, top - 10, C.acid, 3);
       Music.mode = 'normal'; sfx.bossWin();
       return;
     }
@@ -1633,8 +1634,8 @@ function drawMonster(m) {
       ctx.restore();
     }
   }
-  if (m.state === 'meh') txt('?', x, fy - m.h - 14 + dy, C.dim, 'center', 14, 'horror');
-  if (m.state === 'sleep') for (let k = 0; k < 3; k++) txt('Z', x + 10 + k * 7, fy - m.h - 6 - k * 9 - (T * 8 % 9), C.acid, 'left', 10 + k * 3, 'horror');
+  if (m.state === 'meh') txt('?', x, fy - m.h - 14 + dy, C.dim, 'center', 15, 'ui');
+  if (m.state === 'sleep') for (let k = 0; k < 3; k++) txt('Z', x + 10 + k * 7, fy - m.h - 6 - k * 9 - (T * 8 % 9), C.acid, 'left', 10 + k * 3, 'ui');
   ctx.restore();
 }
 function star5(x, y, r, col) {
@@ -1854,7 +1855,7 @@ function drawBar(withCandies) {
     for (let i = 0; i < n; i++) {
       const x = 6 + i * SLOT, y = 332.5, on = i === G.sel;
       ctx.save();
-      if (on) { ctx.shadowColor = C.gold; ctx.shadowBlur = 8 * K; }
+      if (on) { ctx.shadowColor = C.gold; ctx.shadowBlur = blurPx(8); }
       rrect(x, y, SLOT - 3, 26, 4); ctx.fillStyle = on ? 'rgba(255,194,74,.16)' : 'rgba(30,24,70,.6)'; ctx.fill();
       ctx.strokeStyle = on ? C.gold : C.mute; ctx.lineWidth = on ? 1.4 : .8; ctx.stroke();
       ctx.restore();
@@ -1909,7 +1910,7 @@ function drawForestUI() {
   // hunger meter
   const n = m.need, w = 172 + n * 14, x0 = W / 2 - w / 2;
   rrect(x0, 21, w, 21, 5); ctx.fillStyle = 'rgba(3,5,12,.88)'; ctx.fill(); ctx.strokeStyle = C.orange; ctx.lineWidth = 1; ctx.stroke();
-  txt(GUARDIAN.name, x0 + 8, 23, C.orange, 'left', 15, 'horror');
+  txt(GUARDIAN.name, x0 + 8, 24, C.orange, 'left', 14, 'ui');
   for (let i = 0; i < n; i++) {
     const hx = x0 + w - 12 - (n - 1 - i) * 14;
     if (i < m.fed) heart(hx, 26, C.hot, 10); else { heartPath(hx, 26, 10); ctx.strokeStyle = C.mute; ctx.lineWidth = 1; ctx.stroke(); }
@@ -1942,7 +1943,7 @@ function drawBossUI() {
   if (!G || !G.boss || G.bossDone || scene === 'caught') return;
   const b = G.boss, n = b.need, w = 132 + n * 14, x0 = W / 2 - w / 2;
   rrect(x0, 21, w, 21, 5); ctx.fillStyle = 'rgba(3,5,12,.88)'; ctx.fill(); ctx.strokeStyle = C.blood; ctx.lineWidth = 1; ctx.stroke();
-  txt(b.sp.name, x0 + 8, 23, b.sp.col, 'left', 15, 'horror');
+  txt(b.sp.name, x0 + 8, 24, b.sp.col, 'left', 14, 'ui');
   for (let i = 0; i < n; i++) {
     const hx = x0 + w - 12 - (n - 1 - i) * 14;
     if (i < G.bossFed) heart(hx, 26, C.hot, 10);
@@ -1970,7 +1971,7 @@ function bigTitle(s, cx, y, size) {
   ctx.restore();
   pos.forEach(p => { ctx.lineJoin = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = size * .14; ctx.strokeText(p.ch, p.x, p.y); });
   pos.forEach(p => { ctx.fillStyle = '#3a1060'; ctx.fillText(p.ch, p.x + size * .04, p.y + size * .06); });
-  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = 16 * K;
+  ctx.save(); ctx.shadowColor = C.orange; ctx.shadowBlur = blurPx(16);
   pos.forEach(p => { ctx.fillStyle = lg(0, p.y, 0, p.y + size * .9, ['#fffbe0', '#ffd96a', C.gold, '#e07a1a']); ctx.fillText(p.ch, p.x, p.y); });
   ctx.restore();
   // sparkles that wink on and off around the letters
@@ -2068,8 +2069,8 @@ function drawIntro() {
   panel(120, 46, 400, 276);
   const st = G.st, wd = WORLDS[st.wi];
   titleText('Monde ' + fmtLevel(G.level), W / 2, 54, 30);
-  txt(wd.name, W / 2, 86, C.acid, 'center', 16, 'horror');
-  let y = 108;
+  txt(wd.name, W / 2, 93, C.acid, 'center', 16, 'horror');
+  let y = 116;
   if (G.rescued) {
     txt('Léo s\'est échappé de la forêt! Toutes tes lanternes sont rallumées.', W / 2, y, C.toxic, 'center', 12, 'ui', null);
     y += 16;
@@ -2087,7 +2088,7 @@ function drawIntro() {
       newSp.forEach((sp, i) => {
         const cx = colX[0] + (two ? (i ? 36 : -36) : 0);
         ctx.save(); ctx.translate(cx, y + 80); ctx.scale(sc, sc); sp.draw(T * 6, {seed: 1 + i}); ctx.restore();
-        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 12 : 16, 'horror');
+        txt(sp.name, cx, y + 84, sp.col, 'center', two ? 15 : 17, 'ui');
       });
     }
     if (newC.length) {
@@ -2148,7 +2149,7 @@ function drawOver() {
   ctx.fillStyle = 'rgba(2,3,10,.65)'; ctx.fillRect(0, 0, W, 330);
   panel(140, 62, 360, 236);
   ctx.font = '900 30px ' + FONT.horror; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.save(); ctx.shadowColor = C.blood; ctx.shadowBlur = 14 * K; ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112); ctx.restore();
+  ctx.save(); ctx.shadowColor = C.blood; ctx.shadowBlur = blurPx(14); ctx.fillStyle = C.blood; ctx.fillText('Le festin', W / 2, 78); ctx.fillText('est terminé', W / 2, 112); ctx.restore();
   txt('Score  ' + pad(G.score, 6) + '      Monde ' + fmtLevel(G.level), W / 2, 154, C.bone, 'center', 14);
   if (G.qualifies) {
     txt('NOUVEAU RECORD! Écris ton nom :', W / 2, 178, C.gold, 'center', 13);
@@ -2333,7 +2334,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0007';
+const VERSION = '20261105-0018';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;

@@ -1796,7 +1796,7 @@ function drawWorld() {
         ctx.fillStyle = rg(c.x, cy, 0, 12, ['rgba(232,255,58,.25)', 'rgba(0,0,0,0)']); ctx.fillRect(c.x - 12, cy - 12, 24, 24);
         ctx.restore();
         for (let k = 1; k <= 4; k++) glowEye(c.x + k * 5, cy + Math.sin(c.t * 20 + k) * 2, .9 - k * .15, k % 2 ? C.orange : '#ffe070', 5);
-        drawCandy(c.c, c.x, cy, 1.5, -c.t * 12);
+        drawCandy(c.c, c.x, cy, 1.05, -c.t * 12);
       }
       if (G.lan && G.lan.lane === i) drawFloatingLantern(G.lan, i);
       if (G.potion && G.potion.lane === i) drawPotion(G.potion, i);

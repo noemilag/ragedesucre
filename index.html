@@ -819,9 +819,34 @@ let AC = null, musicGain = null, sfxGain = null, NOISE = null;
 const prefs = {music: true, sfx: true};
 try { const p = JSON.parse(localStorage.getItem('bonbons-prefs') || '{}'); if (typeof p.music === 'boolean') prefs.music = p.music; if (typeof p.sfx === 'boolean') prefs.sfx = p.sfx; } catch (e) {}
 function savePrefs() { try { localStorage.setItem('bonbons-prefs', JSON.stringify(prefs)); } catch (e) {} }
+// phones only allow sound after a tap, and an iPhone on silent mutes web audio unless a media element is playing
+let SILENT = null;
+function silentWav() {
+  const n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer), w = (o, t) => [...t].forEach((c, i) => b[o + i] = c.charCodeAt(0));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+  b.fill(128, 44);
+  let bin = ''; b.forEach(x => bin += String.fromCharCode(x));
+  return 'data:audio/wav;base64,' + btoa(bin);
+}
+function unlockAudio() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  try {
+    if (!SILENT) { SILENT = new Audio(silentWav()); SILENT.loop = true; SILENT.setAttribute('playsinline', ''); }
+    if (SILENT.paused) { const pr = SILENT.play(); if (pr && pr.catch) pr.catch(() => {}); }
+  } catch (e) {}
+  if (AC) {
+    if (AC.state !== 'running') { const pr = AC.resume(); if (pr && pr.catch) pr.catch(() => {}); }
+    // a one-sample buffer played inside the tap wakes the audio output on older iPhones
+    try { const src = AC.createBufferSource(); src.buffer = AC.createBuffer(1, 1, 22050); src.connect(AC.destination); src.start(0); } catch (e) {}
+  }
+}
+['touchend', 'click', 'keydown'].forEach(ev => window.addEventListener(ev, () => { initAudio(); unlockAudio(); }, {passive: true}));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && AC) unlockAudio(); });
 function initAudio() {
-  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  if (AC) { if (AC.state !== 'running') { const pr = AC.resume(); if (pr && pr.catch) pr.catch(() => {}); } return; }
   try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; return; }
+  unlockAudio();
   musicGain = AC.createGain(); musicGain.gain.value = .55; musicGain.connect(AC.destination);
   sfxGain = AC.createGain(); sfxGain.gain.value = prefs.sfx ? 1 : 0; sfxGain.connect(AC.destination);
   NOISE = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
@@ -899,6 +924,8 @@ function musicStop() { clearInterval(Music.timer); Music.timer = null; }
 function musicTick() {
   if (!AC) return;
   const e = 60 / Music.tempo / 4;
+  // after the sound was paused (phone locked, app in the background), skip ahead instead of playing a burst of notes
+  if (Music.next < AC.currentTime) Music.next = AC.currentTime + .05;
   while (Music.next < AC.currentTime + .15) { playStep(Music.step, Music.next, e); Music.next += e; Music.step = (Music.step + 1) % 128; }
 }
 function organ(f, t, dur, vol) {
@@ -2348,7 +2375,7 @@ const fontsReady = document.fonts && document.fonts.load
 Promise.race([fontsReady, new Promise(r => setTimeout(r, 2500))]).then(start, start);
 
 /* ---------- Update button: on GitHub Pages, compare this build with version.json and offer a reload ---------- */
-const VERSION = '20261105-0105';
+const VERSION = '20261105-0147';
 (() => {
   const btn = document.getElementById('maj');
   let latest = null;
